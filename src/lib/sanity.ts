@@ -22,14 +22,14 @@ export const MOCK_DATA = {
   siteSettings: {
     studioName: 'Venner Photo Studio',
     tagline: 'Capturing Timeless Moments with Cinematic Elegance',
-    phone: '+1 (555) 123-4567',
-    email: 'hello@vennerphotostudio.com',
-    address: 'Studio 101, Luxury Arts District, New York, NY 10001',
-    workingHours: 'Monday - Saturday: 9:00 AM - 7:00 PM | Sunday: By Appointment',
+    phone: '+91 98259 83437',
+    email: 'vennerphoto@gmail.com',
+    address: 'B-27 Rangdarshan So-1 , Dhanmora , Katargam , Surat',
+    workingHours: 'Monday - Saturday: 9:00 AM - 8:00 PM | Sunday: Available By Appointment Only',
     instagramUrl: 'https://instagram.com/vennerphotostudio',
     facebookUrl: 'https://facebook.com/vennerphotostudio',
     youtubeUrl: 'https://youtube.com/vennerphotostudio',
-    googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.4284898114407!2d-73.98731968459383!3d40.754930979326884!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1653567890123!5m2!1sen!2sus',
+    googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1779775316406!5m2!1sen!2sin',
   },
   heroes: [
     {

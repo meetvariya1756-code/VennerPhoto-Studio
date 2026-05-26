@@ -115,22 +115,22 @@ export default function Footer() {
           <div className="flex flex-col gap-3.5 text-neutral-400 text-sm">
             <div className="flex items-start gap-3">
               <MapPin className="w-4 h-4 text-[#C9A86C] shrink-0 mt-0.5" />
-              <span>Studio 101, Luxury Arts District, New York, NY 10001</span>
+              <span>B-27 Rangdarshan So-1 , Dhanmora , Katargam , Surat</span>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-[#C9A86C] shrink-0" />
-              <span>+1 (555) 123-4567</span>
+              <span>+91 98259 83437</span>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-[#C9A86C] shrink-0" />
-              <span>hello@vennerphotostudio.com</span>
+              <span>vennerphoto@gmail.com</span>
             </div>
             <div className="flex items-start gap-3 mt-1.5 pt-3 border-t border-neutral-800">
               <Clock className="w-4 h-4 text-[#C9A86C] shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-white mb-0.5">Hours</p>
-                <p className="text-xs text-neutral-400">Mon - Sat: 9am - 7pm</p>
-                <p className="text-xs text-neutral-400">Sunday: Closed</p>
+                <p className="text-xs text-neutral-400">Mon - Sat: 9:00 AM - 8:00 PM</p>
+                <p className="text-xs text-neutral-400">Sunday: Available By Appointment Only</p>
               </div>
             </div>
           </div>

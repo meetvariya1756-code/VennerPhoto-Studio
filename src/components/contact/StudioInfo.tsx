@@ -8,17 +8,17 @@ export default function StudioInfo() {
     {
       icon: <MapPin className="w-5 h-5 text-[#C9A86C] shrink-0" />,
       label: 'Visit The Studio',
-      content: 'Studio 101, Luxury Arts District, New York, NY 10001',
+      content: 'B-27 Rangdarshan So-1 , Dhanmora , Katargam , Surat',
     },
     {
       icon: <Phone className="w-5 h-5 text-[#C9A86C] shrink-0" />,
       label: 'Direct Studio Line',
-      content: '+1 (555) 123-4567',
+      content: '+91 98259 83437',
     },
     {
       icon: <Mail className="w-5 h-5 text-[#C9A86C] shrink-0" />,
       label: 'General Electronic Mail',
-      content: 'hello@vennerphotostudio.com',
+      content: 'vennerphoto@gmail.com',
     },
   ];
 
@@ -32,7 +32,7 @@ export default function StudioInfo() {
           Studio Headquarters
         </h3>
         <p className="text-neutral-500 text-sm leading-relaxed max-w-md">
-          Located in the heart of the luxury arts district, our boutique studio is equipped with high-grade lighting, backdrops, and editorial lounges. Consultations are available by appointment.
+          Located in Katargam, Surat, our boutique studio is equipped with high-grade lighting, professional backgrounds, and dynamic styling lounges. Consultations are available by appointment.
         </p>
       </div>
 
@@ -63,7 +63,7 @@ export default function StudioInfo() {
               Operating Hours
             </p>
             <p className="text-[#1A1A1A] text-sm font-medium tracking-wide">
-              Monday - Saturday: 9:00 AM - 7:00 PM
+              Monday - Saturday: 9:00 AM - 8:00 PM
             </p>
             <p className="text-xs text-neutral-400 mt-0.5">
               Sunday: Available By Appointment Only
@@ -75,7 +75,7 @@ export default function StudioInfo() {
       {/* Map Embed Frame */}
       <div className="w-full aspect-[4/3] bg-neutral-100 border border-neutral-200 overflow-hidden shadow-md">
         <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.4284898114407!2d-73.98731968459383!3d40.754930979326884!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1653567890123!5m2!1sen!2sus"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1779775316406!5m2!1sen!2sin"
           width="100%"
           height="100%"
           style={{ border: 0 }}
