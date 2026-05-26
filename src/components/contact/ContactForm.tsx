@@ -16,7 +16,7 @@ const contactSchema = zod.object({
   phone: zod.string().min(6, 'Please enter a valid phone number'),
   service: zod.string().min(1, 'Please select a service'),
   date: zod.string().min(1, 'Please choose a preferred date'),
-  location: zod.string().min(2, 'Please specify an event location'),
+  location: zod.string().optional(),
   message: zod.string().min(10, 'Message must be at least 10 characters'),
 });
 
@@ -119,7 +119,7 @@ export default function ContactForm() {
           <input
             type="text"
             {...register('name')}
-            placeholder="Julian Venner"
+            placeholder="Rahul Patel"
             className="w-full border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:border-[#C9A86C] rounded-none transition-colors"
           />
           {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
@@ -149,7 +149,7 @@ export default function ContactForm() {
           <input
             type="tel"
             {...register('phone')}
-            placeholder="+1 (555) 000-0000"
+            placeholder="+91 9087651234"
             className="w-full border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:border-[#C9A86C] rounded-none transition-colors"
           />
           {errors.phone && <span className="text-xs text-red-500">{errors.phone.message}</span>}
@@ -192,7 +192,7 @@ export default function ContactForm() {
         {/* Event Location */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase">
-            Event / Session Location *
+            Event / Session Location (Optional)
           </label>
           <input
             type="text"
@@ -200,7 +200,6 @@ export default function ContactForm() {
             placeholder="Central Park, NY"
             className="w-full border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:border-[#C9A86C] rounded-none transition-colors"
           />
-          {errors.location && <span className="text-xs text-red-500">{errors.location.message}</span>}
         </div>
       </div>
 

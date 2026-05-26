@@ -10,7 +10,7 @@ const contactServerSchema = zod.object({
   phone: zod.string().min(6),
   service: zod.string().min(1),
   date: zod.string().min(1),
-  location: zod.string().min(2),
+  location: zod.string().optional(),
   message: zod.string().min(10),
 });
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
             <p><strong>Phone Number:</strong> ${phone}</p>
             <p><strong>Photography Service:</strong> ${service}</p>
             <p><strong>Event / Session Date:</strong> ${date}</p>
-            <p><strong>Location:</strong> ${location}</p>
+            <p><strong>Location:</strong> ${location || 'Not Specified'}</p>
             <p style="margin-top: 20px;"><strong>Client Message:</strong></p>
             <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #C9A86C; font-style: italic;">
               ${message.replace(/\n/g, '<br />')}
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       console.log('Client Phone:', phone);
       console.log('Service Category:', service);
       console.log('Event Date:', date);
-      console.log('Event Location:', location);
+      console.log('Event Location:', location || 'Not Specified');
       console.log('Message Detail:', message);
       console.log('--- [MOCK TRANSMISSION COMPLETE] ---');
     }
