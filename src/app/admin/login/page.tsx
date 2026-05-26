@@ -47,12 +47,10 @@ export default function AdminLoginPage() {
         {/* Card */}
         <div className="bg-[#111111] border border-white/10 rounded-2xl p-8 shadow-2xl">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#C9A86C]/10 border border-[#C9A86C]/20 mb-4">
-              <Camera className="w-7 h-7 text-[#C9A86C]" />
-            </div>
-            <h1 className="font-serif text-2xl text-white font-light tracking-wide">Venner Admin</h1>
-            <p className="text-neutral-500 text-xs mt-1 font-sans tracking-wider">Content Management System</p>
+          <div className="text-center mb-8 flex flex-col items-center">
+            <span className="font-serif text-3xl tracking-widest text-white uppercase font-light">Venner</span>
+            <span className="text-[10px] font-sans tracking-[0.3em] text-[#C9A86C] uppercase mt-1">Admin Panel</span>
+            <p className="text-neutral-500 text-[10px] mt-4 font-sans tracking-wider uppercase">Content Management System</p>
           </div>
 
           {/* Form */}

@@ -48,25 +48,25 @@ export default async function AdminDashboard() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-serif text-white font-light tracking-wide">Dashboard</h1>
+        <h1 className="text-2xl font-serif text-[#1A1A1A] font-medium tracking-wide">Dashboard</h1>
         <p className="text-neutral-500 text-sm mt-1">Welcome to Venner Photo Studio admin panel</p>
       </div>
 
       {/* Supabase not configured warning */}
       {!isSupabaseConfigured && (
-        <div className="mb-8 bg-amber-950/50 border border-amber-700/50 rounded-xl p-6 flex gap-4">
-          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl p-6 flex gap-4">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <p className="text-amber-300 font-semibold text-sm mb-1">Supabase not connected yet</p>
-            <p className="text-amber-500/80 text-xs leading-relaxed">
+            <p className="text-amber-800 font-semibold text-sm mb-1">Supabase not connected yet</p>
+            <p className="text-amber-700/80 text-xs leading-relaxed">
               The website is currently running on mock data. To enable live editing:
             </p>
-            <ol className="text-amber-500/80 text-xs mt-2 space-y-1 list-decimal list-inside">
-              <li>Go to <strong className="text-amber-400">supabase.com</strong> → Create a free project</li>
-              <li>Copy your <strong className="text-amber-400">Project URL</strong> and <strong className="text-amber-400">Anon Key</strong></li>
-              <li>Paste them into <code className="bg-amber-900/50 px-1 rounded">.env.local</code> (replace the placeholder values)</li>
-              <li>Run the SQL schema from <code className="bg-amber-900/50 px-1 rounded">supabase/schema.sql</code> in Supabase SQL Editor</li>
-              <li>Restart the dev server with <code className="bg-amber-900/50 px-1 rounded">npm run dev</code></li>
+            <ol className="text-amber-700/80 text-xs mt-2 space-y-1 list-decimal list-inside">
+              <li>Go to <strong className="text-amber-800">supabase.com</strong> → Create a free project</li>
+              <li>Copy your <strong className="text-amber-800">Project URL</strong> and <strong className="text-amber-800">Anon Key</strong></li>
+              <li>Paste them into <code className="bg-amber-100 px-1 rounded">.env.local</code> (replace the placeholder values)</li>
+              <li>Run the SQL schema from <code className="bg-amber-100 px-1 rounded">supabase/schema.sql</code> in Supabase SQL Editor</li>
+              <li>Restart the dev server with <code className="bg-amber-100 px-1 rounded">npm run dev</code></li>
             </ol>
           </div>
         </div>
@@ -83,10 +83,10 @@ export default async function AdminDashboard() {
             { label: 'Team', value: stats.team, icon: Users },
             { label: 'Reviews', value: stats.testimonials, icon: MessageSquare },
           ].map(({ label, value, icon: Icon }) => (
-            <div key={label} className="bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-center">
+            <div key={label} className="bg-white border border-neutral-200/60 rounded-xl p-4 text-center shadow-sm">
               <Icon className="w-5 h-5 text-[#C9A86C] mx-auto mb-2" />
-              <p className="text-2xl font-serif text-white font-light">{value}</p>
-              <p className="text-neutral-500 text-[10px] uppercase tracking-wider mt-0.5">{label}</p>
+              <p className="text-2xl font-serif text-[#1A1A1A] font-semibold">{value}</p>
+              <p className="text-neutral-400 text-[10px] uppercase tracking-wider mt-0.5">{label}</p>
             </div>
           ))}
         </div>
@@ -98,16 +98,16 @@ export default async function AdminDashboard() {
           <Link
             key={href}
             href={href}
-            className="group bg-[#1a1a1a] hover:bg-[#222222] border border-white/10 hover:border-[#C9A86C]/30 rounded-xl p-6 flex items-start gap-4 transition-all duration-200"
+            className="group bg-white hover:bg-neutral-50 border border-neutral-200/60 hover:border-[#C9A86C]/40 rounded-xl p-6 flex items-start gap-4 transition-all duration-200 shadow-sm"
           >
             <div className="w-10 h-10 rounded-lg bg-[#C9A86C]/10 border border-[#C9A86C]/20 flex items-center justify-center shrink-0">
               <Icon className="w-5 h-5 text-[#C9A86C]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm group-hover:text-[#C9A86C] transition-colors">{label}</p>
-              <p className="text-neutral-500 text-xs mt-0.5 leading-relaxed">{description}</p>
+              <p className="text-[#1A1A1A] font-semibold text-sm group-hover:text-[#8C6D39] transition-colors">{label}</p>
+              <p className="text-neutral-400 text-xs mt-0.5 leading-relaxed">{description}</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-neutral-600 group-hover:text-[#C9A86C] group-hover:translate-x-1 transition-all shrink-0 mt-0.5" />
+            <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-[#C9A86C] group-hover:translate-x-1 transition-all shrink-0 mt-0.5" />
           </Link>
         ))}
       </div>

@@ -23,6 +23,12 @@ const SERVICE_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+
+  // Do not render navbar in admin dashboard or sanity studio
+  if (pathname.startsWith('/admin') || pathname.startsWith('/studio')) {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);

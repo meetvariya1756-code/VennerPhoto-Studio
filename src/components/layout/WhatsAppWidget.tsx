@@ -1,9 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageSquare } from 'lucide-react';
 
 export default function WhatsAppWidget() {
+  const pathname = usePathname();
+
+  // Do not render WhatsApp widget in admin dashboard or sanity studio
+  if (pathname.startsWith('/admin') || pathname.startsWith('/studio')) {
+    return null;
+  }
   const [isVisible, setIsVisible] = useState(false);
 
   // Smooth entry animation after a brief delay

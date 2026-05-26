@@ -104,17 +104,17 @@ export default function PortfolioAdminPage() {
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-serif text-white font-light tracking-wide">Portfolio Photos</h1>
+          <h1 className="text-2xl font-serif text-[#1A1A1A] font-medium tracking-wide">Portfolio Photos</h1>
           <p className="text-neutral-500 text-sm mt-1">{photos.length} photos · {photos.filter(p => p.is_featured).length} featured</p>
         </div>
         <div className="flex gap-3">
           {/* Bulk Upload */}
           <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={e => e.target.files && handleBulkUpload(e.target.files)} />
-          <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white text-sm px-5 py-2.5 rounded-lg transition-all disabled:opacity-60 border border-neutral-700">
+          <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex items-center gap-2 bg-white hover:bg-neutral-50 text-neutral-600 hover:text-[#1A1A1A] text-sm px-5 py-2.5 rounded-lg transition-all disabled:opacity-60 border border-neutral-300 shadow-sm">
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {uploading ? 'Uploading...' : 'Bulk Upload'}
           </button>
-          <button onClick={() => setEditing({ ...EMPTY })} className="flex items-center gap-2 bg-[#C9A86C] hover:bg-[#E5C483] text-[#1A1A1A] font-semibold text-sm px-5 py-2.5 rounded-lg transition-all">
+          <button onClick={() => setEditing({ ...EMPTY })} className="flex items-center gap-2 bg-[#C9A86C] hover:bg-[#E5C483] text-[#1A1A1A] font-semibold text-sm px-5 py-2.5 rounded-lg transition-all shadow-sm">
             <Plus className="w-4 h-4" /> Add Photo
           </button>
         </div>
@@ -122,23 +122,23 @@ export default function PortfolioAdminPage() {
 
       {/* Category Filter */}
       <div className="flex gap-2 flex-wrap mb-6">
-        <button onClick={() => setFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${filter === 'all' ? 'bg-[#C9A86C] text-[#1A1A1A]' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}>All</button>
+        <button onClick={() => setFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border ${filter === 'all' ? 'bg-[#1A1A1A] text-[#C9A86C] border-[#1A1A1A]' : 'bg-white text-neutral-500 border-neutral-200 hover:bg-neutral-50'}`}>All</button>
         {CATEGORIES.map(c => (
-          <button key={c.value} onClick={() => setFilter(c.value)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${filter === c.value ? 'bg-[#C9A86C] text-[#1A1A1A]' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}>{c.label}</button>
+          <button key={c.value} onClick={() => setFilter(c.value)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border ${filter === c.value ? 'bg-[#1A1A1A] text-[#C9A86C] border-[#1A1A1A]' : 'bg-white text-neutral-500 border-neutral-200 hover:bg-neutral-50'}`}>{c.label}</button>
         ))}
       </div>
 
       {/* Photo Grid */}
       {filtered.length === 0 && (
-        <div className="text-center py-16 text-neutral-600 border border-dashed border-neutral-700 rounded-xl">No photos in this category yet.</div>
+        <div className="text-center py-16 text-neutral-400 bg-white border border-neutral-200 rounded-xl shadow-sm">No photos in this category yet.</div>
       )}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {filtered.map((photo) => (
-          <div key={photo.id} className="group relative aspect-square bg-neutral-900 rounded-xl overflow-hidden border border-white/5">
+          <div key={photo.id} className="group relative aspect-square bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200 shadow-sm">
             <img src={photo.image_url} alt={photo.title} className="w-full h-full object-cover" />
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-200 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-              <button onClick={() => setEditing(photo)} className="bg-white/20 hover:bg-[#C9A86C] text-white hover:text-[#1A1A1A] text-xs px-3 py-1.5 rounded-lg transition-all font-semibold">Edit</button>
+              <button onClick={() => setEditing(photo)} className="bg-white/25 hover:bg-[#C9A86C] text-white hover:text-[#1A1A1A] text-xs px-3 py-1.5 rounded-lg transition-all font-semibold">Edit</button>
               <button onClick={() => handleDelete(photo.id!)} className="bg-red-600/80 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg transition-all">Delete</button>
             </div>
             {/* Featured badge */}
@@ -155,46 +155,46 @@ export default function PortfolioAdminPage() {
 
       {/* Edit Modal */}
       {editing && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-white font-semibold">{editing.id ? 'Edit' : 'Add'} Photo</h2>
-              <button onClick={() => setEditing(null)}><X className="w-5 h-5 text-neutral-400 hover:text-white" /></button>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-200 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+              <h2 className="text-[#1A1A1A] font-semibold">{editing.id ? 'Edit' : 'Add'} Photo</h2>
+              <button onClick={() => setEditing(null)}><X className="w-5 h-5 text-neutral-400 hover:text-[#1A1A1A]" /></button>
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
               {/* Image Preview / URL */}
               {editing.image_url && (
-                <img src={editing.image_url} alt="" className="w-full h-48 object-cover rounded-xl mb-2" />
+                <img src={editing.image_url} alt="" className="w-full h-48 object-cover rounded-xl mb-2 shadow-sm border border-neutral-200" />
               )}
               <div>
-                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">Image URL *</label>
-                <input required value={editing.image_url} onChange={e => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://... or upload via Bulk Upload" className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A86C] transition-colors" />
+                <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Image URL *</label>
+                <input required value={editing.image_url} onChange={e => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://... or upload via Bulk Upload" className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">Title</label>
-                <input value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A86C] transition-colors" />
+                <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Title</label>
+                <input value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">Category</label>
-                <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A86C] transition-colors">
+                <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Category</label>
+                <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm">
                   {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-1.5">Alt Text (SEO)</label>
-                <input value={editing.alt_text} onChange={e => setEditing({ ...editing, alt_text: e.target.value })} placeholder="Describe the image for accessibility" className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A86C] transition-colors" />
+                <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Alt Text (SEO)</label>
+                <input value={editing.alt_text} onChange={e => setEditing({ ...editing, alt_text: e.target.value })} placeholder="Describe the image for accessibility" className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
               </div>
               <div className="flex items-center gap-3">
                 <input type="checkbox" id="p-feat" checked={editing.is_featured} onChange={e => setEditing({ ...editing, is_featured: e.target.checked })} className="w-4 h-4 accent-[#C9A86C]" />
-                <label htmlFor="p-feat" className="text-sm text-neutral-300">Featured (shown on homepage)</label>
+                <label htmlFor="p-feat" className="text-sm text-neutral-600">Featured (shown on homepage)</label>
               </div>
-              {error && <p className="text-red-400 text-xs">{error}</p>}
+              {error && <p className="text-red-700 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3 shadow-sm">{error}</p>}
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving} className="flex items-center gap-2 bg-[#C9A86C] hover:bg-[#E5C483] text-[#1A1A1A] font-semibold text-sm px-6 py-2.5 rounded-lg transition-all disabled:opacity-60">
+                <button type="submit" disabled={saving} className="flex items-center gap-2 bg-[#C9A86C] hover:bg-[#E5C483] text-[#1A1A1A] font-semibold text-sm px-6 py-2.5 rounded-lg transition-all disabled:opacity-60 shadow-md">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   {saving ? 'Saving...' : 'Save Photo'}
                 </button>
-                <button type="button" onClick={() => setEditing(null)} className="text-neutral-400 hover:text-white border border-neutral-700 px-6 py-2.5 rounded-lg text-sm transition-colors">Cancel</button>
+                <button type="button" onClick={() => setEditing(null)} className="text-neutral-500 hover:text-neutral-700 border border-neutral-300 hover:bg-neutral-50 px-6 py-2.5 rounded-lg text-sm transition-colors shadow-sm">Cancel</button>
               </div>
             </form>
           </div>

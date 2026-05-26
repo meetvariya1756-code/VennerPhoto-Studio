@@ -11,16 +11,15 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ heroes }: HeroSectionProps) {
-  // Use first active hero or a default fallback
-  const hero = heroes && heroes.length > 0 ? heroes[0] : {
-    _id: 'default',
-    title: 'Chasing the Light, Capturing the Soul',
-    subtitle: 'Premium editorial, wedding, and commercial photography tailored to your story.',
-    ctaButtonText: 'Book Your Session',
-    ctaButtonLink: '/contact',
-    backgroundVideoUrl: 'https://res.cloudinary.com/demo/video/upload/q_auto,f_auto/dog.mp4',
-    backgroundImage: undefined,
-    isActive: true,
+  const rawHero = heroes && heroes.length > 0 ? heroes[0] : null;
+
+  const hero = {
+    title: rawHero ? rawHero.title : 'Chasing the Light, Capturing the Soul',
+    subtitle: rawHero ? rawHero.subtitle : 'Premium editorial, wedding, and commercial photography tailored to your story.',
+    ctaButtonText: rawHero ? (rawHero.cta_text || (rawHero as any).ctaButtonText) : 'Book Your Session',
+    ctaButtonLink: rawHero ? (rawHero.cta_link || (rawHero as any).ctaButtonLink) : '/contact',
+    backgroundImage: rawHero ? (rawHero.background_image_url || (rawHero as any).backgroundImage) : undefined,
+    backgroundVideoUrl: rawHero ? (rawHero as any).backgroundVideoUrl : undefined,
   };
 
   return (
@@ -34,7 +33,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover opacity-50"
+            className="w-full h-full object-cover opacity-70"
           />
         ) : (
           <ImageWithFallback
@@ -44,12 +43,12 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
             alt="Venner Photo Studio Hero Showcase"
             fill
             priority
-            className="opacity-40"
+            className="opacity-65 object-cover"
           />
         )}
         {/* Luxury Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-black/50 z-1" />
-        <div className="absolute inset-0 bg-black/30 z-1" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-black/30 z-1" />
+        <div className="absolute inset-0 bg-black/15 z-1" />
       </div>
 
       {/* Content Container */}
@@ -73,7 +72,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.4 }}
-            className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extralight tracking-tight text-white leading-[1.1] mb-6"
+            className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight tracking-tight text-white leading-[1.1] mb-6"
           >
             {hero.title}
           </motion.h1>
@@ -83,7 +82,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.6 }}
-            className="font-sans text-base sm:text-lg md:text-xl text-neutral-300 font-light leading-relaxed mb-10 max-w-2xl"
+            className="font-sans text-sm sm:text-base md:text-lg text-neutral-200 font-light leading-relaxed mb-10 max-w-2xl"
           >
             {hero.subtitle || 'Bespoke editorial portfolios, high-fashion campaigns, and destination wedding captures engineered with unmatched passion.'}
           </motion.p>

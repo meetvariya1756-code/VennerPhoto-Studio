@@ -2,9 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Instagram, Facebook, Youtube, Mail, Phone, MapPin, Clock } from 'lucide-react';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Do not render footer in admin dashboard or sanity studio
+  if (pathname.startsWith('/admin') || pathname.startsWith('/studio')) {
+    return null;
+  }
   const quickLinks = [
     { title: 'Home', href: '/' },
     { title: 'Portfolio', href: '/portfolio' },
