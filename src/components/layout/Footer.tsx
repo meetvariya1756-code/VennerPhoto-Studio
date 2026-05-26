@@ -119,11 +119,15 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-[#C9A86C] shrink-0" />
-              <span>+91 98259 83437</span>
+              <a href="tel:+919825983437" className="text-neutral-400 hover:text-[#C9A86C] transition-colors">
+                +91 98259 83437
+              </a>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-[#C9A86C] shrink-0" />
-              <span>vennerphoto@gmail.com</span>
+              <a href="mailto:vennerphoto@gmail.com" className="text-neutral-400 hover:text-[#C9A86C] transition-colors">
+                vennerphoto@gmail.com
+              </a>
             </div>
             <div className="flex items-start gap-3 mt-1.5 pt-3 border-t border-neutral-800">
               <Clock className="w-4 h-4 text-[#C9A86C] shrink-0 mt-0.5" />

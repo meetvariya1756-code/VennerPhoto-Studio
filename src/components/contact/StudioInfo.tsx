@@ -9,16 +9,19 @@ export default function StudioInfo() {
       icon: <MapPin className="w-5 h-5 text-[#C9A86C] shrink-0" />,
       label: 'Visit The Studio',
       content: 'B-27 Rangdarshan So-1 , Dhanmora , Katargam , Surat',
+      href: 'https://www.google.com/maps/search/?api=1&query=Venner+Photo+Studio+Surat',
     },
     {
       icon: <Phone className="w-5 h-5 text-[#C9A86C] shrink-0" />,
       label: 'Direct Studio Line',
       content: '+91 98259 83437',
+      href: 'tel:+919825983437',
     },
     {
       icon: <Mail className="w-5 h-5 text-[#C9A86C] shrink-0" />,
       label: 'General Electronic Mail',
       content: 'vennerphoto@gmail.com',
+      href: 'mailto:vennerphoto@gmail.com',
     },
   ];
 
@@ -47,9 +50,20 @@ export default function StudioInfo() {
               <p className="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase mb-0.5">
                 {item.label}
               </p>
-              <p className="text-[#1A1A1A] text-sm font-medium tracking-wide">
-                {item.content}
-              </p>
+              {item.href ? (
+                <a
+                  href={item.href}
+                  className="text-[#1A1A1A] text-sm font-medium tracking-wide hover:text-[#C9A86C] transition-colors block w-fit"
+                  target={item.href.startsWith('http') ? '_blank' : undefined}
+                  rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                >
+                  {item.content}
+                </a>
+              ) : (
+                <p className="text-[#1A1A1A] text-sm font-medium tracking-wide">
+                  {item.content}
+                </p>
+              )}
             </div>
           </div>
         ))}
