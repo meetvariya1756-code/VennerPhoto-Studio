@@ -26,9 +26,9 @@ export const MOCK_DATA = {
     email: 'vennerphoto@gmail.com',
     address: 'B-27 Rangdarshan So-1 , Dhanmora , Katargam , Surat',
     workingHours: 'Monday - Saturday: 9:00 AM - 8:00 PM | Sunday: Available By Appointment Only',
-    instagramUrl: 'https://instagram.com/vennerphotostudio',
-    facebookUrl: 'https://facebook.com/vennerphotostudio',
-    youtubeUrl: 'https://youtube.com/vennerphotostudio',
+    instagramUrl: 'https://www.instagram.com/vennerphoto?igsh=cW53NnFuNjduanVj',
+    facebookUrl: 'https://www.facebook.com/share/18frTUd7PD/',
+    youtubeUrl: 'https://m.youtube.com/%40vennerphoto?fbclid=PAb21jcASCG99leHRuA2FlbQIxMQBzcnRjBmFwcF9pZA81NjcwNjczNDMzNTI0MjcAAae0Ku13NdzYLWLCq1NucKAK0JBd3IB3xc8WLAuernPLHIWGihGMKLWsXO5NMw_aem_I2_94LJLB5ri58jfCwYCSg',
     googleMapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1779775316406!5m2!1sen!2sin',
   },
   heroes: [

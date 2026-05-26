@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown } from 'lucide-react';
@@ -26,6 +26,18 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleDropdownEnter = () => {
+    if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+    setServicesDropdownOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    leaveTimeoutRef.current = setTimeout(() => {
+      setServicesDropdownOpen(false);
+    }, 180);
+  };
 
   const isHome = pathname === '/';
 
@@ -89,8 +101,8 @@ export default function Navbar() {
                   <div
                     key={link.title}
                     className="relative group/drop"
-                    onMouseEnter={() => setServicesDropdownOpen(true)}
-                    onMouseLeave={() => setServicesDropdownOpen(false)}
+                    onMouseEnter={handleDropdownEnter}
+                    onMouseLeave={handleDropdownLeave}
                   >
                     <Link
                       href={link.href}
@@ -105,28 +117,33 @@ export default function Navbar() {
 
                     {/* Services Dropdown */}
                     <div
+                      onMouseEnter={handleDropdownEnter}
+                      onMouseLeave={handleDropdownLeave}
                       className={cn(
-                        'absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 bg-[#1A1A1A] border border-neutral-800 rounded-none shadow-2xl p-2 transition-all duration-300 transform origin-top',
+                        'absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-3 w-64 transition-all duration-300 transform origin-top',
                         servicesDropdownOpen
                           ? 'opacity-100 scale-100 pointer-events-auto'
                           : 'opacity-0 scale-95 pointer-events-none'
                       )}
                     >
-                      <div className="grid grid-cols-1 gap-0.5">
-                        {SERVICE_LINKS.map((service) => (
-                          <Link
-                            key={service.slug}
-                            href={`/services/${service.slug}`}
-                            className={cn(
-                              'px-4 py-2.5 font-sans text-xs tracking-wider uppercase transition-all duration-200 hover:bg-neutral-800 hover:text-[#C9A86C] text-left block',
-                              pathname === `/services/${service.slug}`
-                                ? 'text-[#C9A86C] bg-neutral-900'
-                                : 'text-white/70'
-                            )}
-                          >
-                            {service.title}
-                          </Link>
-                        ))}
+                      <div className="bg-[#1A1A1A] border border-neutral-800 shadow-2xl p-2">
+                        <div className="grid grid-cols-1 gap-0.5">
+                          {SERVICE_LINKS.map((service) => (
+                            <Link
+                              key={service.slug}
+                              href={`/services/${service.slug}`}
+                              onClick={() => setServicesDropdownOpen(false)}
+                              className={cn(
+                                'px-4 py-2.5 font-sans text-xs tracking-wider uppercase transition-all duration-200 hover:bg-neutral-800 hover:text-[#C9A86C] text-left block',
+                                pathname === `/services/${service.slug}`
+                                  ? 'text-[#C9A86C] bg-neutral-900'
+                                  : 'text-white/70'
+                              )}
+                            >
+                              {service.title}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

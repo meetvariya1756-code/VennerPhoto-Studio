@@ -192,12 +192,12 @@ export default function ContactForm() {
         {/* Event Location */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase">
-            Event / Session Location (Optional)
+            Event Location (Optional)
           </label>
           <input
             type="text"
             {...register('location')}
-            placeholder="Central Park, NY"
+            placeholder="Surat, Gujarat"
             className="w-full border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:border-[#C9A86C] rounded-none transition-colors"
           />
         </div>

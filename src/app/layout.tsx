@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import WhatsAppWidget from '@/components/layout/WhatsAppWidget';
 import { getSiteSettings } from '@/lib/sanity.queries';
 import './globals.css';
 
@@ -38,13 +39,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className="flex flex-col min-h-screen bg-[#F9F7F4] text-[#1A1A1A]">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className="flex flex-col min-h-screen bg-[#F9F7F4] text-[#1A1A1A]"
+      >
         {/* Responsive blurred header */}
         <Navbar />
 
         {/* Dynamic page context streams */}
-        <main className="flex-1 w-full relative z-10">
+        <main className="flex-1 w-full relative">
           {children}
         </main>
 
@@ -72,6 +76,9 @@ export default function RootLayout({
             },
           }}
         />
+
+        {/* Floating WhatsApp inquiry widget across all pages */}
+        <WhatsAppWidget />
       </body>
     </html>
   );

@@ -77,9 +77,9 @@ export function getLocalBusinessSchema() {
       },
     ],
     'sameAs': [
-      'https://instagram.com/vennerphotostudio',
-      'https://facebook.com/vennerphotostudio',
-      'https://youtube.com/vennerphotostudio',
+      'https://www.instagram.com/vennerphoto?igsh=cW53NnFuNjduanVj',
+      'https://www.facebook.com/share/18frTUd7PD/',
+      'https://m.youtube.com/%40vennerphoto?fbclid=PAb21jcASCG99leHRuA2FlbQIxMQBzcnRjBmFwcF9pZA81NjcwNjczNDMzNTI0MjcAAae0Ku13NdzYLWLCq1NucKAK0JBd3IB3xc8WLAuernPLHIWGihGMKLWsXO5NMw_aem_I2_94LJLB5ri58jfCwYCSg',
     ],
   };
 }

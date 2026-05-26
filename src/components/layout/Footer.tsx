@@ -42,7 +42,7 @@ export default function Footer() {
           {/* Social Icons */}
           <div className="flex items-center gap-4 mt-4">
             <a
-              href="https://instagram.com/vennerphotostudio"
+              href="https://www.instagram.com/vennerphoto?igsh=cW53NnFuNjduanVj"
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-[#C9A86C] hover:border-[#C9A86C] transition-all duration-300"
@@ -51,7 +51,7 @@ export default function Footer() {
               <Instagram className="w-4 h-4" />
             </a>
             <a
-              href="https://facebook.com/vennerphotostudio"
+              href="https://www.facebook.com/share/18frTUd7PD/"
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-[#C9A86C] hover:border-[#C9A86C] transition-all duration-300"
@@ -60,7 +60,7 @@ export default function Footer() {
               <Facebook className="w-4 h-4" />
             </a>
             <a
-              href="https://youtube.com/vennerphotostudio"
+              href="https://m.youtube.com/%40vennerphoto?fbclid=PAb21jcASCG99leHRuA2FlbQIxMQBzcnRjBmFwcF9pZA81NjcwNjczNDMzNTI0MjcAAae0Ku13NdzYLWLCq1NucKAK0JBd3IB3xc8WLAuernPLHIWGihGMKLWsXO5NMw_aem_I2_94LJLB5ri58jfCwYCSg"
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 rounded-full border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-[#C9A86C] hover:border-[#C9A86C] transition-all duration-300"
@@ -143,7 +143,7 @@ export default function Footer() {
 
       {/* Footer Bottom Deck */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 border-t border-neutral-800 pt-8 flex flex-col md:flex-row items-center justify-between text-neutral-500 text-xs font-light">
-        <p>© {new Date().getFullYear()} Venner Photo Studio. All rights reserved.</p>
+        <p suppressHydrationWarning>© {new Date().getFullYear()} Venner Photo Studio. All rights reserved.</p>
         <p className="mt-2 md:mt-0 tracking-wider">
           DESIGNED WITH PASSION & ELEGANCE
         </p>

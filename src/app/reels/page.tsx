@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import ReelsGrid from '@/components/reels/ReelsGrid';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { generateSiteMetadata } from '@/lib/metadata';
-import { getReels } from '@/lib/sanity.queries';
+import { getReels } from '@/lib/db';
 
 export const revalidate = 600;
 
@@ -17,13 +17,12 @@ export default async function ReelsPage() {
   const reels = await getReels();
 
   return (
-    <div className="pt-28 pb-24 bg-[#1A1A1A] text-white min-h-screen">
+    <div className="pt-28 pb-24 bg-[#F9F7F4] text-[#1A1A1A] min-h-screen">
       <div className="max-w-7xl mx-auto px-6 md:px-8">
         <SectionHeader
           title="Cinematic Motion"
           subtitle="Video Reels"
           align="center"
-          light
         />
 
         {/* Video reels grid with modal players */}

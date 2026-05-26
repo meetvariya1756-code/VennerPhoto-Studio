@@ -47,7 +47,7 @@ export default function ServicesGrid({ services }: ServicesGridProps) {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10"
         >
           {featuredServices.map((service, index) => (
-            <motion.div key={service._id} variants={itemVariants} className="group relative">
+            <motion.div key={service._id || index} variants={itemVariants} className="group relative">
               <Link
                 href={`/services/${service.slug.current}`}
                 className="block relative aspect-[4/5] overflow-hidden bg-neutral-200 border border-neutral-200/50 shadow-sm"

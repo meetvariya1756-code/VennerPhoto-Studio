@@ -21,15 +21,24 @@ export const CATEGORIES = [
 interface CategoryFilterProps {
   activeCategory: string;
   onCategoryChange: (categoryId: string) => void;
+  darkBg?: boolean;
 }
 
 export default function CategoryFilter({
   activeCategory,
   onCategoryChange,
+  darkBg = false,
 }: CategoryFilterProps) {
   return (
     <div className="w-full flex items-center justify-center overflow-x-auto pb-4 mb-12 scrollbar-hide">
-      <div className="flex items-center gap-1 bg-[#1A1A1A]/5 border border-neutral-200/50 p-1.5 md:p-2 max-w-full rounded-none">
+      <div
+        className={cn(
+          'flex items-center gap-1 p-1.5 md:p-2 max-w-full rounded-none border',
+          darkBg
+            ? 'bg-neutral-900/60 border-neutral-800'
+            : 'bg-[#1A1A1A]/5 border-neutral-200/50'
+        )}
+      >
         {CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat.id;
           return (
@@ -39,7 +48,11 @@ export default function CategoryFilter({
               className={cn(
                 'whitespace-nowrap px-4 py-2 font-sans text-xs tracking-wider uppercase font-medium transition-all duration-300 focus:outline-none rounded-none',
                 isActive
-                  ? 'bg-[#1A1A1A] text-white shadow-sm'
+                  ? darkBg
+                    ? 'bg-[#C9A86C] text-black shadow-sm'
+                    : 'bg-[#1A1A1A] text-white shadow-sm'
+                  : darkBg
+                  ? 'text-neutral-400 hover:text-white'
                   : 'text-neutral-500 hover:text-[#1A1A1A]'
               )}
             >

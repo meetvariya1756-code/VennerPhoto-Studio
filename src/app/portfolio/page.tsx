@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import PortfolioGrid from '@/components/portfolio/PortfolioGrid';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { generateSiteMetadata } from '@/lib/metadata';
-import { getPortfolioPhotos } from '@/lib/sanity.queries';
+import { getPortfolioPhotos } from '@/lib/db';
 
 export const revalidate = 600; // Cache portfolio page for 10 minutes
 

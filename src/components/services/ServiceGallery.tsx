@@ -1,95 +1,345 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import ImageWithFallback from '../ui/ImageWithFallback';
-import PhotoLightbox from '../portfolio/PhotoLightbox';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import Image from 'next/image';
 import SectionHeader from '../ui/SectionHeader';
-import { SanityImage, PortfolioPhoto } from '@/types';
+import { SanityImage } from '@/types';
 
 interface ServiceGalleryProps {
   gallery?: SanityImage[];
   serviceTitle: string;
+  serviceSlug?: string;
 }
 
-export default function ServiceGallery({ gallery, serviceTitle }: ServiceGalleryProps) {
+// Rich image pools per service category (12 high-quality Unsplash images each)
+const SERVICE_IMAGE_POOLS: Record<string, string[]> = {
+  'wedding-photography': [
+    'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1507914372368-b2b085b925a1?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'engagement-photography': [
+    'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1518049362265-d5b2a6467637?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1445633629932-0029acc44e88?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1546961342-ea5f71a193b3?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1574170609306-c5ab0b28edde?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1537204696486-967f1b7198c8?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1604017011826-d3b4c23f8914?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'baby-shower-photography': [
+    'https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1531914485145-b9a7bc70d0a6?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1490131784822-b4626a8ec96a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1617331140180-e8262094733a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1588769737932-1e3e2b8e5b55?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1484981138541-3d074aa97716?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1553530979-fbb9e4aee36f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516627145497-ae6968895b24?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'children-photography': [
+    'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1510022151265-1bce987a2e47?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516627145497-ae6968895b24?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1545558014-8692077e9b5c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1543342384-1f1350e27861?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1511949860663-92c5c57d48a7?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1534308143481-c55f00be8bd7?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1484981138541-3d074aa97716?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'indoor-studio-photography': [
+    'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1533636721434-0e2d61030955?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1617122018524-e9b80c7d8e50?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1520316587275-5e4f06f355e3?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1467913135492-5786dfc832f4?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'product-photography': [
+    'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1581068532941-58baf67dfedd?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1587304773958-28ac4b01523c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=800&q=80',
+  ],
+  'modeling-photography': [
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1520316587275-5e4f06f355e3?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'corporate-event-photography': [
+    'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1559223607-b4d0555ae227?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1543269664-7eef42226a21?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'birthday-photography': [
+    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1533294455009-a77b7557d2d1?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1524666041070-9d87656c25b8?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1509909756405-be0199881695?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1543269664-7eef42226a21?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&w=1200&q=80',
+  ],
+  'maternity-photography': [
+    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1516627145497-ae6968895b24?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1617331140180-e8262094733a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1531914485145-b9a7bc70d0a6?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1490131784822-b4626a8ec96a?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1484981138541-3d074aa97716?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1553530979-fbb9e4aee36f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1588769737932-1e3e2b8e5b55?auto=format&fit=crop&w=1200&q=80',
+  ],
+};
+
+// Fallback generic photography images
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1559223607-b4d0555ae227?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1520316587275-5e4f06f355e3?auto=format&fit=crop&w=1200&q=80',
+];
+
+export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: ServiceGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // If gallery is empty or missing, create mock gallery images
-  const images = gallery && gallery.length > 0 ? gallery : [
-    { _type: 'image' as const, asset: { _ref: 'mg1', _type: 'reference' as const } },
-    { _type: 'image' as const, asset: { _ref: 'mg2', _type: 'reference' as const } },
-    { _type: 'image' as const, asset: { _ref: 'mg3', _type: 'reference' as const } },
-    { _type: 'image' as const, asset: { _ref: 'mg4', _type: 'reference' as const } },
-    { _type: 'image' as const, asset: { _ref: 'mg5', _type: 'reference' as const } },
-    { _type: 'image' as const, asset: { _ref: 'mg6', _type: 'reference' as const } }
-  ];
-
-  // Convert SanityImage list to PortfolioPhoto structure to satisfy Lightbox Props
-  const portfolioPhotos: PortfolioPhoto[] = images.map((img, i) => ({
-    _id: `gimg-${i}`,
-    title: `${serviceTitle} Showcase ${i + 1}`,
-    image: img as any,
-    category: serviceTitle.toLowerCase().replace(' ', '-'),
-    isFeatured: false
-  }));
+  // Determine which image pool to use
+  const slug = serviceSlug || serviceTitle.toLowerCase().replace(/\s+/g, '-');
+  const imageUrls = SERVICE_IMAGE_POOLS[slug] || FALLBACK_IMAGES;
 
   const handleNext = () => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => {
-      if (prev === null) return null;
-      return (prev + 1) % portfolioPhotos.length;
-    });
+    setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % imageUrls.length));
   };
 
   const handlePrev = () => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => {
-      if (prev === null) return null;
-      return (prev - 1 + portfolioPhotos.length) % portfolioPhotos.length;
-    });
+    setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + imageUrls.length) % imageUrls.length));
   };
+
+  // Keyboard navigation
+  React.useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'ArrowLeft') handlePrev();
+    };
+    window.addEventListener('keydown', handler);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handler);
+      document.body.style.overflow = '';
+    };
+  }, [lightboxIndex]);
 
   return (
     <div className="w-full">
       <SectionHeader
-        title="Visual Showcase"
-        subtitle="Selected Frames"
+        title="Photo Gallery"
+        subtitle={`${serviceTitle} Collection`}
         align="center"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {images.map((img, index) => (
-          <div
-            key={`gal-${index}`}
-            onClick={() => setLightboxIndex(index)}
-            className="group relative aspect-square overflow-hidden bg-neutral-200 border border-neutral-200/50 cursor-pointer shadow-sm"
-          >
-            <ImageWithFallback
-              src={img}
-              fallbackType="photo"
-              fallbackIndex={index}
-              alt={`${serviceTitle} Showcase Frame ${index + 1}`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="group-hover:scale-105 transition-transform duration-700 ease-out"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300" />
-          </div>
-        ))}
+      <p className="text-center text-neutral-500 font-sans text-sm mb-10 -mt-4">
+        Click any photo to view full screen • {imageUrls.length} photos
+      </p>
+
+      {/* Masonry-style grid - varied column spans for visual richness */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {imageUrls.map((url, index) => {
+          // Every 7th image takes a double column span for visual variety
+          const isWide = index === 0 || index === 6;
+          const isTall = index === 3 || index === 9;
+
+          return (
+            <motion.div
+              key={`gal-${index}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: (index % 6) * 0.07 }}
+              onClick={() => setLightboxIndex(index)}
+              className={`group relative overflow-hidden bg-neutral-200 cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-300 ${
+                isWide ? 'col-span-2' : ''
+              } ${isTall ? 'row-span-2' : ''}`}
+              style={{ aspectRatio: isTall ? '3/4' : isWide ? '16/9' : '4/3' }}
+            >
+              <Image
+                src={url}
+                alt={`${serviceTitle} - Photo ${index + 1}`}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+              />
+              {/* Dark hover overlay with zoom icon */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300" />
+              </div>
+              {/* Photo number badge */}
+              <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm text-white font-sans text-[10px] tracking-widest uppercase px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {String(index + 1).padStart(2, '0')}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Lightbox Trigger overlay */}
-      {lightboxIndex !== null && portfolioPhotos[lightboxIndex] && (
-        <PhotoLightbox
-          photo={portfolioPhotos[lightboxIndex]}
-          index={lightboxIndex}
-          total={portfolioPhotos.length}
-          onClose={() => setLightboxIndex(null)}
-          onNext={handleNext}
-          onPrev={handlePrev}
-        />
-      )}
+      {/* Fullscreen Lightbox */}
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black/97 backdrop-blur-md flex items-center justify-center p-4 md:p-8 select-none"
+          >
+            {/* Top bar: counter + close */}
+            <div className="absolute top-0 inset-x-0 flex items-center justify-between z-50 text-white px-6 py-4 bg-gradient-to-b from-black/60 to-transparent">
+              <span className="font-sans text-xs tracking-widest uppercase text-neutral-300">
+                {serviceTitle} &nbsp;·&nbsp; {lightboxIndex + 1} / {imageUrls.length}
+              </span>
+              <button
+                onClick={() => setLightboxIndex(null)}
+                className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full border border-white/20 transition-all focus:outline-none"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Left Arrow */}
+            <button
+              onClick={handlePrev}
+              className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/20 hover:scale-105 active:scale-95 transition-all duration-200 z-50 focus:outline-none"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* Right Arrow */}
+            <button
+              onClick={handleNext}
+              className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/20 hover:scale-105 active:scale-95 transition-all duration-200 z-50 focus:outline-none"
+              aria-label="Next"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Image */}
+            <motion.div
+              key={lightboxIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              className="relative w-full max-w-5xl max-h-[82vh] flex items-center justify-center"
+            >
+              <div className="relative w-full h-full" style={{ minHeight: '60vh' }}>
+                <Image
+                  src={imageUrls[lightboxIndex]}
+                  alt={`${serviceTitle} - Photo ${lightboxIndex + 1}`}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </motion.div>
+
+            {/* Bottom thumbnail strip */}
+            <div className="absolute bottom-0 inset-x-0 pb-4 pt-6 bg-gradient-to-t from-black/70 to-transparent flex justify-center gap-1.5 px-4 flex-wrap">
+              {imageUrls.map((url, i) => (
+                <button
+                  key={i}
+                  onClick={() => setLightboxIndex(i)}
+                  className={`relative w-10 h-10 overflow-hidden rounded transition-all duration-200 ${
+                    i === lightboxIndex
+                      ? 'ring-2 ring-[#C9A86C] scale-110'
+                      : 'opacity-50 hover:opacity-100'
+                  }`}
+                >
+                  <Image src={url} alt="" fill sizes="40px" className="object-cover" />
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
