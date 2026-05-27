@@ -29,7 +29,7 @@ export default function WhatsAppWidget() {
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 transition-all duration-700 ease-out transform ${
+      className={`whatsapp-widget-container fixed bottom-6 right-6 z-50 transition-all duration-700 ease-out transform ${
         isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-12 opacity-0 scale-90'
       }`}
     >

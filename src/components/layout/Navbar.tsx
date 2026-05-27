@@ -67,6 +67,19 @@ export default function Navbar() {
     setServicesDropdownOpen(false);
   }, [pathname]);
 
+  // Synchronize body class when mobile menu state changes
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+    // Clean up when unmounting
+    return () => {
+      document.body.classList.remove('mobile-menu-open');
+    };
+  }, [isOpen]);
+
   const navLinks = [
     { title: 'Home', href: '/' },
     { title: 'Portfolio', href: '/portfolio' },

@@ -91,7 +91,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 w-full flex flex-col justify-center text-left">
+      <div className="relative z-10 max-w-7xl mx-auto px-10 md:px-8 w-full flex flex-col justify-center text-left">
         <div className="max-w-3xl">
           {/* Subtle gold tag */}
           <motion.div
@@ -143,17 +143,17 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
         <>
           <button
             onClick={handlePrev}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 border border-white/10 hover:border-[#C9A86C]/50 text-white/70 hover:text-[#C9A86C] transition-all duration-300 backdrop-blur-sm"
+            className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 border border-white/10 hover:border-[#C9A86C]/50 text-white/70 hover:text-[#C9A86C] transition-all duration-300 backdrop-blur-sm"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronLeft className="w-4 h-4 md:w-6 md:h-6" />
           </button>
           <button
             onClick={handleNext}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 border border-white/10 hover:border-[#C9A86C]/50 text-white/70 hover:text-[#C9A86C] transition-all duration-300 backdrop-blur-sm"
+            className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 border border-white/10 hover:border-[#C9A86C]/50 text-white/70 hover:text-[#C9A86C] transition-all duration-300 backdrop-blur-sm"
             aria-label="Next slide"
           >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronRight className="w-4 h-4 md:w-6 md:h-6" />
           </button>
         </>
       )}

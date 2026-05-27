@@ -38,3 +38,13 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Hide WhatsApp widget when mobile menu is open (mobile only) */
+@media (max-width: 768px) {
+  body.mobile-menu-open .whatsapp-widget-container {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(20px) scale(0.95) !important;
+    visibility: hidden !important;
+  }
+}

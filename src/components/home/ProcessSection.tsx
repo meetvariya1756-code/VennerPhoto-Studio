@@ -67,13 +67,13 @@ export default function ProcessSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-100px' }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-16"
           >
             {LEGACY_METRICS.map((metric, idx) => (
               <motion.div
                 key={idx}
                 variants={itemVariants}
-                className="p-8 bg-neutral-900/20 border border-neutral-800/40 rounded-none text-center flex flex-col items-center hover:border-[#C9A86C]/20 hover:bg-neutral-900/50 transition-all duration-300"
+                className="p-4 sm:p-8 bg-neutral-900/20 border border-neutral-800/40 rounded-none text-center flex flex-col items-center hover:border-[#C9A86C]/20 hover:bg-neutral-900/50 transition-all duration-300"
               >
                 <div className="w-10 h-10 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-5">
                   {metric.icon}
