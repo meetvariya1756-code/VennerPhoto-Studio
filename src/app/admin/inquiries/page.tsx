@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
-import { Mail, Trash2, Loader2, Calendar, MapPin, User, Phone, Eye, X } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { Mail, Trash2, Loader2, Calendar, MapPin, User, Phone, Eye, X, CheckCircle2, Circle } from 'lucide-react';
+import { formatDate, cn } from '@/lib/utils';
 
 interface Inquiry {
   id: string;
@@ -15,6 +15,7 @@ interface Inquiry {
   location: string | null;
   message: string;
   created_at: string;
+  is_completed?: boolean;
 }
 
 export default function InquiriesAdminPage() {
@@ -43,6 +44,24 @@ export default function InquiriesAdminPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleToggleCompleted = async (id: string, currentVal: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const sb = createClient();
+    const { error: err } = await sb
+      .from('contact_inquiries')
+      .update({ is_completed: !currentVal })
+      .eq('id', id);
+
+    if (err) {
+      alert('Failed to update status: ' + err.message);
+    } else {
+      if (selected?.id === id) {
+        setSelected({ ...selected, is_completed: !currentVal });
+      }
+      load();
+    }
+  };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -130,11 +149,29 @@ CREATE POLICY "Auth delete contact_inquiries" ON contact_inquiries FOR DELETE US
                   <tr
                     key={inq.id}
                     onClick={() => setSelected(inq)}
-                    className="hover:bg-neutral-50/40 cursor-pointer transition-colors"
+                    className={cn(
+                      "hover:bg-neutral-50/40 cursor-pointer transition-colors",
+                      inq.is_completed && "bg-emerald-50/10 opacity-75"
+                    )}
                   >
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-[#1A1A1A]">{inq.name}</div>
-                      <div className="text-neutral-400 text-xs mt-0.5">{inq.email}</div>
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      <button
+                        onClick={(e) => handleToggleCompleted(inq.id, !!inq.is_completed, e)}
+                        className="text-neutral-400 hover:text-emerald-600 transition-colors"
+                        title={inq.is_completed ? "Mark as New Inquiry" : "Mark as Conversation Completed"}
+                      >
+                        {inq.is_completed ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-50" />
+                        ) : (
+                          <Circle className="w-5 h-5" />
+                        )}
+                      </button>
+                      <div>
+                        <div className={cn("font-semibold text-[#1A1A1A]", inq.is_completed && "line-through text-neutral-400 font-normal")}>
+                          {inq.name}
+                        </div>
+                        <div className="text-neutral-400 text-xs mt-0.5">{inq.email}</div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-neutral-600 font-medium">
                       {inq.service.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -242,6 +279,28 @@ CREATE POLICY "Auth delete contact_inquiries" ON contact_inquiries FOR DELETE US
                   className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs px-5 py-2.5 rounded-lg tracking-wider uppercase transition-colors"
                 >
                   <Trash2 className="w-4 h-4" /> Delete Inquiry
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    handleToggleCompleted(selected.id, !!selected.is_completed, e);
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 font-semibold text-xs px-5 py-2.5 rounded-lg tracking-wider uppercase transition-colors",
+                    selected.is_completed
+                      ? "bg-amber-600 hover:bg-amber-500 text-white"
+                      : "bg-emerald-600 hover:bg-emerald-500 text-white"
+                  )}
+                >
+                  {selected.is_completed ? (
+                    <>
+                      <Circle className="w-4 h-4" /> Mark New Lead
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" /> Mark Completed
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
