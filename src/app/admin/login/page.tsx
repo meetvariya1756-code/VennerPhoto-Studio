@@ -48,7 +48,11 @@ export default function AdminLoginPage() {
         <div className="bg-[#111111] border border-white/10 rounded-2xl p-8 shadow-2xl">
           {/* Logo */}
           <div className="text-center mb-8 flex flex-col items-center">
-            <span className="font-serif text-3xl tracking-widest text-white uppercase font-light">Venner</span>
+            <img
+              src="/logo.png"
+              alt="Venner Photo Studio Logo"
+              className="h-24 w-auto object-contain mb-3"
+            />
             <span className="text-[10px] font-sans tracking-[0.3em] text-[#C9A86C] uppercase mt-1">Admin Panel</span>
             <p className="text-neutral-500 text-[10px] mt-4 font-sans tracking-wider uppercase">Content Management System</p>
           </div>
