@@ -18,7 +18,7 @@ async function getStats() {
       sb.from('team_members').select('id', { count: 'exact', head: true }),
       sb.from('testimonials').select('id', { count: 'exact', head: true }),
       sb.from('heroes').select('id', { count: 'exact', head: true }),
-      sb.from('contact_inquiries').select('id', { count: 'exact', head: true }).catch(() => ({ count: 0 })),
+      sb.from('contact_inquiries').select('id', { count: 'exact', head: true }),
     ]);
     return {
       photos: photos.count || 0,
