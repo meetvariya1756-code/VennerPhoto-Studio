@@ -14,7 +14,7 @@ interface HeroSectionProps {
 export default function HeroSection({ heroes }: HeroSectionProps) {
   // Safe filtering of active heroes
   const activeHeroes = heroes && heroes.length > 0 
-    ? heroes.filter(h => h.is_active !== false) 
+    ? heroes.filter(h => h.isActive !== false) 
     : [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -43,9 +43,9 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
   const hero = {
     title: currentHero ? currentHero.title : 'Chasing the Light, Capturing the Soul',
     subtitle: currentHero ? currentHero.subtitle : 'Premium editorial, wedding, and commercial photography tailored to your story.',
-    ctaButtonText: currentHero ? (currentHero.cta_text || (currentHero as any).ctaButtonText) : 'Book Your Session',
-    ctaButtonLink: currentHero ? (currentHero.cta_link || (currentHero as any).ctaButtonLink) : '/contact',
-    backgroundImage: currentHero ? (currentHero.background_image_url || (currentHero as any).backgroundImage) : undefined,
+    ctaButtonText: currentHero ? ((currentHero as any).cta_text || (currentHero as any).ctaButtonText) : 'Book Your Session',
+    ctaButtonLink: currentHero ? ((currentHero as any).cta_link || (currentHero as any).ctaButtonLink) : '/contact',
+    backgroundImage: currentHero ? ((currentHero as any).background_image_url || (currentHero as any).backgroundImage) : undefined,
     backgroundVideoUrl: currentHero ? (currentHero as any).backgroundVideoUrl : undefined,
   };
 
@@ -55,7 +55,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
       <div className="absolute inset-0 w-full h-full z-0">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentHero ? currentHero.id : 'default'}
+            key={currentHero ? ((currentHero as any).id || currentHero._id) : 'default'}
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 0.85, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -108,7 +108,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentHero ? currentHero.id : 'default-text'}
+              key={currentHero ? ((currentHero as any).id || currentHero._id) : 'default-text'}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}

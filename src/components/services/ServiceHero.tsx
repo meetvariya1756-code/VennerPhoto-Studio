@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import ImageWithFallback from '../ui/ImageWithFallback';
 import { Service } from '@/types';
 
 interface ServiceHeroProps {
@@ -32,8 +32,10 @@ export default function ServiceHero({ service }: ServiceHeroProps) {
     <section className="relative w-full h-[60vh] min-h-[420px] overflow-hidden flex items-center justify-center bg-black">
       {/* Background Frame */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <Image
+        <ImageWithFallback
           src={heroUrl}
+          fallbackType="hero"
+          fallbackIndex={3}
           alt={service.title}
           fill
           priority
