@@ -26,7 +26,7 @@ const DEFAULT_HERO = 'https://images.unsplash.com/photo-1492691527719-9d1e07e534
 
 export default function ServiceHero({ service }: ServiceHeroProps) {
   const slug = service?.slug?.current || '';
-  const heroUrl = HERO_IMAGES[slug] || DEFAULT_HERO;
+  const heroUrl = service?.heroImage || HERO_IMAGES[slug] || DEFAULT_HERO;
 
   return (
     <section className="relative w-full h-[60vh] min-h-[420px] overflow-hidden flex items-center justify-center bg-black">

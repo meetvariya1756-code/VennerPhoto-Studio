@@ -5,7 +5,7 @@ import ServiceHero from '@/components/services/ServiceHero';
 import ServiceGallery from '@/components/services/ServiceGallery';
 import ServicePackages from '@/components/services/ServicePackages';
 import SectionHeader from '@/components/ui/SectionHeader';
-import { getServiceBySlug, getServices } from '@/lib/sanity.queries';
+import { getServiceBySlug, getServices } from '@/lib/db';
 import { generateSiteMetadata } from '@/lib/metadata';
 import { MOCK_DATA } from '@/lib/sanity';
 
@@ -18,42 +18,62 @@ interface ServicePageProps {
   };
 }
 
+function normalizeService(srv: any) {
+  if (!srv) return srv;
+  return {
+    ...srv,
+    _id: srv.id || srv._id,
+    slug: typeof srv.slug === 'object' && srv.slug ? srv.slug : { current: srv.slug },
+    heroImage: srv.hero_image_url || srv.heroImage,
+    shortDescription: srv.short_description || srv.shortDescription,
+    fullDescription: srv.full_description 
+      ? (Array.isArray(srv.full_description) 
+          ? srv.full_description 
+          : [{ _type: 'block', children: [{ text: srv.full_description }] }])
+      : srv.fullDescription,
+    isActive: srv.is_active !== undefined ? srv.is_active : srv.isActive,
+    order: srv.display_order !== undefined ? srv.display_order : srv.order,
+  };
+}
+
 // Generate static params for Next.js to pre-compile all service pages
 export async function generateStaticParams() {
   const services = await getServices();
   return services.map((srv) => ({
-    slug: srv.slug.current,
+    slug: typeof srv.slug === 'object' && srv.slug ? (srv.slug as any).current : srv.slug,
   }));
 }
 
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
-  // Try CMS first, fallback to mock data
+  const { slug } = await params;
   let service;
   try {
-    service = await getServiceBySlug(params.slug);
+    const rawService = await getServiceBySlug(slug);
+    service = normalizeService(rawService);
   } catch {
-    service = MOCK_DATA.services.find(s => s.slug.current === params.slug) as any;
+    service = MOCK_DATA.services.find(s => s.slug.current === slug) as any;
   }
   if (!service) return {};
   return generateSiteMetadata({
     title: service.seoTitle || service.title,
     description: service.seoDescription || service.shortDescription,
-    path: `/services/${params.slug}`,
+    path: `/services/${slug}`,
   });
 }
 
 export default async function ServiceDetailPage({ params }: ServicePageProps) {
-  // Try CMS first, then fallback to mock data so pages are never blank
+  const { slug } = await params;
   let service;
   try {
-    service = await getServiceBySlug(params.slug);
+    const rawService = await getServiceBySlug(slug);
+    service = normalizeService(rawService);
   } catch {
     service = null;
   }
 
   // If CMS returned null, check mock data before giving up
   if (!service) {
-    const mockMatch = MOCK_DATA.services.find(s => s.slug.current === params.slug);
+    const mockMatch = MOCK_DATA.services.find(s => s.slug.current === slug);
     if (mockMatch) {
       service = {
         ...mockMatch,
@@ -71,37 +91,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
       {/* 1. Large background image overlay ServiceHero banner */}
       <ServiceHero service={service} />
 
-      {/* 2. Detailed Service Overview & Narrative Description */}
-      <section className="py-14 md:py-16">
-        <div className="max-w-4xl mx-auto px-6 text-center flex flex-col items-center">
-          <span className="text-[#C9A86C] font-sans text-xs tracking-widest uppercase font-semibold mb-2">
-            About This Service
-          </span>
-          <h2 className="font-serif text-3xl font-light tracking-wide text-[#1A1A1A] mb-6">
-            {service.title}
-          </h2>
-          <div className="w-12 h-[1px] bg-neutral-300 mb-6" />
-          <p className="font-sans text-base sm:text-lg text-neutral-600 font-light leading-relaxed max-w-3xl">
-            {service.shortDescription}
-          </p>
-
-          {/* Full description blocks */}
-          {service.fullDescription && service.fullDescription.length > 0 && (
-            <div className="text-left font-sans text-sm text-neutral-500 leading-relaxed max-w-2xl flex flex-col gap-4 mt-8">
-              {service.fullDescription.map((block: any, idx: number) => {
-                if (block._type === 'block') {
-                  const paragraphText = block.children?.map((c: any) => c.text).join('') || '';
-                  return <p key={idx}>{paragraphText}</p>;
-                }
-                return null;
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* 3. Full Photo Gallery — primary focus of the page */}
-      <section className="py-10 md:py-16 border-t border-neutral-200/40 bg-white">
+      {/* 2. Full Photo Gallery — primary focus of the page */}
+      <section className="py-10 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <ServiceGallery
             gallery={service.gallery}
@@ -111,14 +102,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         </div>
       </section>
 
-      {/* 4. Pricing / Packages tiers sheets */}
-      <section className="py-16 md:py-20 border-t border-neutral-200/40">
-        <div className="max-w-7xl mx-auto px-6 md:px-8">
-          <ServicePackages packages={service.packages} serviceSlug={service.slug.current} />
-        </div>
-      </section>
-
-      {/* 5. Direct Booking Call-to-action bottom deck */}
+      {/* 3. Direct Booking Call-to-action bottom deck */}
       <section className="py-16 border-t border-neutral-200/40 bg-[#1A1A1A] text-white text-center">
         <div className="max-w-3xl mx-auto px-6 flex flex-col items-center gap-6">
           <span className="text-[#C9A86C] font-sans text-xs tracking-widest uppercase font-semibold">

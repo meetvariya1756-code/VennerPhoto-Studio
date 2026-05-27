@@ -74,9 +74,9 @@ export default function PhotoLightbox({
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      {/* Center Image Canvas */}
-      <div className="relative w-full max-w-5xl aspect-[3/2] max-h-[75vh] flex items-center justify-center">
-        <div className="w-full h-full relative">
+      {/* Center Image Canvas & Text Panel */}
+      <div className="flex flex-col items-center justify-center w-full max-w-5xl h-full max-h-[80vh] gap-4 z-10">
+        <div className="relative w-full flex-1 min-h-0">
           <ImageWithFallback
             src={photo.image}
             fallbackType="photo"
@@ -84,22 +84,23 @@ export default function PhotoLightbox({
             alt={photo.title}
             fill
             sizes="100vw"
-            className="object-contain bg-transparent"
+            objectFit="contain"
+            className="bg-transparent"
           />
         </div>
-      </div>
 
-      {/* Bottom Text Panel */}
-      <div className="absolute bottom-6 inset-x-6 text-center text-white z-50">
-        <span className="text-[#C9A86C] font-sans text-xs tracking-widest uppercase font-semibold mb-1 block">
-          {photo.category.replace('-photography', '').replace('-', ' ')}
-        </span>
-        <h3 className="font-serif text-xl md:text-2xl font-light tracking-wide max-w-lg mx-auto">
-          {photo.title}
-        </h3>
-        {photo.altText && (
-          <p className="text-xs text-neutral-400 mt-2 font-sans italic">{photo.altText}</p>
-        )}
+        {/* Bottom Text Panel */}
+        <div className="text-center text-white w-full max-w-2xl px-4 shrink-0">
+          <span className="text-[#C9A86C] font-sans text-xs tracking-widest uppercase font-semibold mb-1 block">
+            {photo.category.replace('-photography', '').replace(/-/g, ' ')}
+          </span>
+          <h3 className="font-serif text-lg md:text-xl font-light tracking-wide max-w-xl mx-auto break-words leading-relaxed">
+            {photo.title}
+          </h3>
+          {photo.altText && (
+            <p className="text-xs text-neutral-400 mt-1.5 font-sans italic">{photo.altText}</p>
+          )}
+        </div>
       </div>
     </div>
   );

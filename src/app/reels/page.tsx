@@ -5,7 +5,7 @@ import SectionHeader from '@/components/ui/SectionHeader';
 import { generateSiteMetadata } from '@/lib/metadata';
 import { getReels } from '@/lib/db';
 
-export const revalidate = 600;
+export const revalidate = 0;
 
 export const metadata: Metadata = generateSiteMetadata({
   title: 'Cinematic Video Reels',
@@ -14,7 +14,14 @@ export const metadata: Metadata = generateSiteMetadata({
 });
 
 export default async function ReelsPage() {
-  const reels = await getReels();
+  const rawReels = await getReels();
+  const reels = rawReels.map((r: any) => ({
+    ...r,
+    _id: r.id || r._id,
+    videoUrl: r.video_url || r.videoUrl,
+    thumbnailImage: r.thumbnail_url || r.thumbnailImage,
+    isFeatured: r.is_featured !== undefined ? r.is_featured : r.isFeatured,
+  }));
 
   return (
     <div className="pt-28 pb-24 bg-[#F9F7F4] text-[#1A1A1A] min-h-screen">

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, Film } from 'lucide-react';
+import { getMockPlaceholder } from '@/lib/utils';
 
 interface Reel {
   id?: string;
@@ -16,7 +17,7 @@ interface Reel {
 
 const CATEGORIES = [
   'wedding-photography', 'engagement-photography', 'modeling-photography',
-  'product-photography', 'maternity-photography', 'corporate-event-photography',
+  'product-photography', 'maternity-photography', 'baby-shower-photography', 'corporate-event-photography',
   'birthday-photography', 'children-photography', 'indoor-studio-photography',
 ];
 
@@ -75,13 +76,25 @@ export default function ReelsAdminPage() {
         {reels.length === 0 && (
           <div className="col-span-3 text-center py-16 text-neutral-400 bg-white border border-neutral-200 rounded-xl shadow-sm">No reels yet. Click "Add Reel" to upload your first video.</div>
         )}
-        {reels.map((reel) => (
+        {reels.map((reel, index) => (
           <div key={reel.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden group shadow-sm">
-            <div className="relative aspect-video bg-neutral-100 flex items-center justify-center border-b border-neutral-200">
+            <div className="relative aspect-video bg-neutral-100 flex items-center justify-center border-b border-neutral-200 overflow-hidden">
               {reel.thumbnail_url ? (
-                <img src={reel.thumbnail_url} alt={reel.title} className="w-full h-full object-cover" />
+                <img
+                  src={reel.thumbnail_url}
+                  alt={reel.title}
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <Film className="w-10 h-10 text-neutral-300" />
+                <video
+                  src={reel.video_url}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  loop
+                  autoPlay
+                  className="w-full h-full object-cover"
+                />
               )}
               {reel.is_featured && (
                 <span className="absolute top-2 left-2 bg-[#C9A86C] text-[#1A1A1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Featured</span>

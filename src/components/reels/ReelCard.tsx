@@ -17,16 +17,28 @@ export default function ReelCard({ reel, index, onClick }: ReelCardProps) {
       onClick={onClick}
       className="group relative aspect-[9/16] overflow-hidden bg-neutral-900 border border-neutral-800 shadow-xl cursor-pointer hover:border-[#C9A86C]/40 transition-all duration-500"
     >
-      {/* Thumbnail cover */}
-      <ImageWithFallback
-        src={reel.thumbnailImage}
-        fallbackType="video-thumb"
-        fallbackIndex={index}
-        alt={reel.title}
-        fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-        className="group-hover:scale-103 transition-transform duration-700 ease-out"
-      />
+      {/* Thumbnail cover or live video */}
+      {reel.thumbnailImage ? (
+        <ImageWithFallback
+          src={reel.thumbnailImage}
+          fallbackType="video-thumb"
+          fallbackIndex={index}
+          alt={reel.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="group-hover:scale-103 transition-transform duration-700 ease-out"
+        />
+      ) : (
+        <video
+          src={reel.videoUrl}
+          preload="metadata"
+          muted
+          playsInline
+          loop
+          autoPlay
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 ease-out"
+        />
+      )}
 
       {/* Dark overlay & Play buttons */}
       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors duration-300 flex flex-col justify-between p-6">

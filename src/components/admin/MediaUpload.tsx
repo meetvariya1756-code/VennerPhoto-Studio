@@ -10,6 +10,8 @@ interface MediaUploadProps {
   folder?: string;
   currentUrl?: string;
   onUpload: (url: string) => void;
+  onUploadMultiple?: (urls: string[]) => void;
+  multiple?: boolean;
   label?: string;
   accept?: string;
 }
@@ -20,10 +22,14 @@ export default function MediaUpload({
   folder = 'uploads',
   currentUrl,
   onUpload,
+  onUploadMultiple,
+  multiple = false,
   label,
   accept,
 }: MediaUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  const [totalFilesCount, setTotalFilesCount] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(currentUrl || '');
@@ -32,50 +38,66 @@ export default function MediaUpload({
     ? 'image/jpeg,image/png,image/webp,image/gif'
     : 'video/mp4,video/webm,video/mov';
 
-  const handleFile = useCallback(async (file: File) => {
+  const handleFiles = useCallback(async (files: FileList) => {
     setError('');
     setUploading(true);
-    setProgress(10);
+    setProgress(5);
+    setTotalFilesCount(files.length);
+    
+    const uploadedUrls: string[] = [];
+    const supabase = createClient();
 
     try {
-      const supabase = createClient();
-      const ext = file.name.split('.').pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      for (let i = 0; i < files.length; i++) {
+        setCurrentFileIndex(i + 1);
+        const file = files[i];
+        const ext = file.name.split('.').pop();
+        const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      setProgress(30);
+        const { data, error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(fileName, file, { upsert: true });
 
-      const { data, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file, { upsert: true });
+        if (uploadError) throw uploadError;
 
-      if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(data.path);
 
-      setProgress(80);
+        uploadedUrls.push(publicUrl);
+        setProgress(Math.round(((i + 1) / files.length) * 100));
+      }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      setPreview(publicUrl);
-      onUpload(publicUrl);
-      setProgress(100);
+      if (multiple && onUploadMultiple) {
+        onUploadMultiple(uploadedUrls);
+      } else if (uploadedUrls.length > 0) {
+        setPreview(uploadedUrls[0]);
+        onUpload(uploadedUrls[0]);
+      }
     } catch (err: any) {
       setError(err.message || 'Upload failed. Please check your Supabase configuration.');
     } finally {
       setUploading(false);
-      setTimeout(() => setProgress(0), 1000);
+      setTimeout(() => {
+        setProgress(0);
+        setTotalFilesCount(0);
+      }, 1000);
     }
-  }, [bucket, folder, onUpload]);
+  }, [bucket, folder, multiple, onUpload, onUploadMultiple]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFiles(files);
+    }
+  }, [handleFiles]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFiles(files);
+    }
   };
 
   return (
@@ -86,8 +108,8 @@ export default function MediaUpload({
         </label>
       )}
 
-      {/* Current Media Preview */}
-      {preview && (
+      {/* Current Media Preview (only if single upload) */}
+      {!multiple && preview && (
         <div className="relative mb-3 rounded-lg overflow-hidden bg-neutral-800 border border-neutral-700">
           {type === 'image' ? (
             <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
@@ -116,12 +138,18 @@ export default function MediaUpload({
           accept={accept || defaultAccept}
           onChange={handleChange}
           disabled={uploading}
+          multiple={multiple}
         />
 
         {uploading ? (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="w-6 h-6 text-[#C9A86C] animate-spin" />
-            <span className="text-xs text-neutral-400">{progress}% uploaded</span>
+            <span className="text-xs text-neutral-400">
+              {totalFilesCount > 1 
+                ? `Uploading photo ${currentFileIndex} of ${totalFilesCount}... (${progress}%)`
+                : `${progress}% uploaded`
+              }
+            </span>
             <div className="w-32 h-1 bg-neutral-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#C9A86C] transition-all duration-300"
@@ -137,7 +165,7 @@ export default function MediaUpload({
               <Film className="w-6 h-6" />
             )}
             <span className="text-xs">
-              <span className="text-[#C9A86C] font-semibold">Click to upload</span> or drag & drop
+              <span className="text-[#C9A86C] font-semibold">Click to upload</span> or drag & drop {multiple && 'multiple photos'}
             </span>
             <span className="text-[10px] text-neutral-500">
               {type === 'image' ? 'JPG, PNG, WEBP up to 10MB' : 'MP4, WEBM, MOV up to 100MB'}
@@ -150,16 +178,18 @@ export default function MediaUpload({
         <p className="mt-2 text-xs text-red-400 font-sans">{error}</p>
       )}
 
-      {/* Manual URL input fallback */}
-      <div className="mt-2">
-        <input
-          type="url"
-          placeholder="Or paste direct URL..."
-          value={preview}
-          onChange={(e) => { setPreview(e.target.value); onUpload(e.target.value); }}
-          className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#C9A86C] transition-colors"
-        />
-      </div>
+      {/* Manual URL input fallback (only for single upload) */}
+      {!multiple && (
+        <div className="mt-2">
+          <input
+            type="url"
+            placeholder="Or paste direct URL..."
+            value={preview}
+            onChange={(e) => { setPreview(e.target.value); onUpload(e.target.value); }}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-[#C9A86C] transition-colors"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -178,7 +178,18 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
 
   // Determine which image pool to use
   const slug = serviceSlug || serviceTitle.toLowerCase().replace(/\s+/g, '-');
-  const imageUrls = SERVICE_IMAGE_POOLS[slug] || FALLBACK_IMAGES;
+  
+  // Safe extraction of dynamic gallery images uploaded via Supabase Admin
+  const customImages = gallery && gallery.length > 0 
+    ? gallery.map(item => {
+        if (typeof item === 'string') return item;
+        return (item as any).image_url || (item as any).url || (item as any).asset?._ref || '';
+      }).filter(Boolean)
+    : [];
+
+  const imageUrls = customImages.length > 0 
+    ? customImages 
+    : (SERVICE_IMAGE_POOLS[slug] || FALLBACK_IMAGES);
 
   const handleNext = () => {
     if (lightboxIndex === null) return;

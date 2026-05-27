@@ -35,13 +35,12 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
         {/* Column 1: Brand & Tagline */}
         <div className="flex flex-col gap-4">
-          <Link href="/" className="flex flex-col w-fit">
-            <span className="font-serif text-2xl tracking-wider uppercase font-light text-white">
-              Venner
-            </span>
-            <span className="text-[10px] font-sans tracking-[0.3em] text-[#C9A86C] uppercase -mt-0.5">
-              Photo Studio
-            </span>
+          <Link href="/" className="flex items-center w-fit">
+            <img
+              src="/logo.png"
+              alt="Venner Photo Studio Logo"
+              className="h-18 md:h-24 w-auto object-contain"
+            />
           </Link>
           <p className="text-neutral-400 text-sm leading-relaxed mt-2 max-w-xs">
             Bespoke high-end photography capturing luxury weddings, editorial portraits, commercial branding, and timeless lifecycles with cinematic distinction.

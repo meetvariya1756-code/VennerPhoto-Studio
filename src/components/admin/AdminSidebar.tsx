@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Settings, Image, Film, Users, MessageSquare,
-  Camera, LogOut, ChevronRight, Menu, X, Layers
+  Camera, LogOut, ChevronRight, Menu, X, Layers, Mail
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: '/admin/reels', label: 'Video Reels', icon: Film },
   { href: '/admin/team', label: 'Team Members', icon: Users },
   { href: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
+  { href: '/admin/inquiries', label: 'Contact Inquiries', icon: Mail },
 ];
 
 export default function AdminSidebar() {
@@ -40,10 +41,16 @@ export default function AdminSidebar() {
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white">
       {/* Logo */}
-      <div className="px-6 py-6 border-b border-neutral-200/60">
-        <Link href="/" target="_blank" className="flex flex-col">
-          <span className="font-serif text-xl tracking-wider text-[#1A1A1A] uppercase font-light">Venner</span>
-          <span className="text-[9px] font-sans tracking-[0.3em] text-[#C9A86C] uppercase -mt-0.5">Admin Panel</span>
+      <div className="px-6 py-5 border-b border-neutral-200/60">
+        <Link href="/" target="_blank" className="flex flex-col items-center gap-1">
+          <img
+            src="/logo-black.png"
+            alt="Venner Photo Studio Logo"
+            className="h-28 w-auto object-contain"
+          />
+          <span className="text-[8px] font-sans tracking-[0.25em] text-[#C9A86C] uppercase block mt-1.5">
+            Admin Panel
+          </span>
         </Link>
       </div>
 
@@ -98,9 +105,15 @@ export default function AdminSidebar() {
 
       {/* Mobile Top Bar */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-neutral-200/60 flex items-center justify-between px-4 py-3">
-        <Link href="/" className="flex flex-col">
-          <span className="font-serif text-lg tracking-wider text-[#1A1A1A] uppercase font-light">Venner</span>
-          <span className="text-[8px] font-sans tracking-[0.3em] text-[#C9A86C] uppercase -mt-0.5">Admin Panel</span>
+        <Link href="/" className="flex items-center gap-2">
+          <img
+            src="/logo-black.png"
+            alt="Venner Photo Studio Logo"
+            className="h-20 w-auto object-contain"
+          />
+          <span className="text-[7px] font-sans tracking-[0.25em] text-[#C9A86C] uppercase mt-1">
+            Admin
+          </span>
         </Link>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-[#1A1A1A] p-1">
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

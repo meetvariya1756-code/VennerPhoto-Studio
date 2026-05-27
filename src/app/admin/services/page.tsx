@@ -7,9 +7,9 @@ import { Plus, Trash2, Loader2, Save, X, ChevronRight, Images, Tag, ArrowLeft } 
 
 interface ServicePackage { id?: string; service_id?: string; package_name: string; price: string; features: string[]; display_order: number; }
 interface GalleryImage { id?: string; service_id?: string; image_url: string; alt_text: string; display_order: number; }
-interface Service { id?: string; title: string; slug: string; short_description: string; full_description: string; hero_image_url: string; is_active: boolean; display_order: number; seo_title: string; seo_description: string; }
+interface Service { id?: string; title: string; slug: string; short_description: string; full_description: string; hero_image_url: string; thumbnail_image_url?: string; is_active: boolean; display_order: number; seo_title: string; seo_description: string; }
 
-const EMPTY_SERVICE: Service = { title: '', slug: '', short_description: '', full_description: '', hero_image_url: '', is_active: true, display_order: 0, seo_title: '', seo_description: '' };
+const EMPTY_SERVICE: Service = { title: '', slug: '', short_description: '', full_description: '', hero_image_url: '', thumbnail_image_url: '', is_active: true, display_order: 0, seo_title: '', seo_description: '' };
 
 type View = 'list' | 'edit-service' | 'manage-gallery' | 'manage-packages';
 
@@ -78,6 +78,19 @@ export default function ServicesAdminPage() {
     const sb = createClient();
     const { data } = await sb.from('service_gallery').insert({ service_id: selected.id, image_url: imageUrl, alt_text: '', display_order: gallery.length + 1 }).select().single();
     if (data) setGallery(g => [...g, data]);
+  };
+
+  const addGalleryImages = async (imageUrls: string[]) => {
+    if (!selected?.id || !imageUrls || imageUrls.length === 0) return;
+    const sb = createClient();
+    const rows = imageUrls.map((url, idx) => ({
+      service_id: selected?.id,
+      image_url: url,
+      alt_text: '',
+      display_order: gallery.length + idx + 1
+    }));
+    const { data } = await sb.from('service_gallery').insert(rows).select();
+    if (data) setGallery(g => [...g, ...data]);
   };
 
   const removeGalleryImage = async (id: string) => {
@@ -168,7 +181,10 @@ export default function ServicesAdminPage() {
             <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Full Description</label>
             <textarea value={editForm.full_description} onChange={e => setEditForm(f => ({ ...f, full_description: e.target.value }))} rows={5} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors resize-none shadow-sm" />
           </div>
-          <MediaUpload type="image" folder="services" currentUrl={editForm.hero_image_url} onUpload={url => setEditForm(f => ({ ...f, hero_image_url: url }))} label="Hero Image" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MediaUpload type="image" folder="services" currentUrl={editForm.hero_image_url} onUpload={url => setEditForm(f => ({ ...f, hero_image_url: url }))} label="Detail Page Hero Banner Image" />
+            <MediaUpload type="image" folder="services" currentUrl={editForm.thumbnail_image_url} onUpload={url => setEditForm(f => ({ ...f, thumbnail_image_url: url }))} label="Homepage Card Thumbnail Image" />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Display Order</label>
@@ -218,7 +234,7 @@ export default function ServicesAdminPage() {
         </div>
       </div>
       <div className="bg-white border border-neutral-200/60 rounded-xl p-6 mb-6 shadow-sm">
-        <MediaUpload type="image" folder={`services/${selected?.slug}`} onUpload={url => addGalleryImage(url)} label="Add Gallery Photo" />
+        <MediaUpload type="image" folder={`services/${selected?.slug}`} onUpload={url => addGalleryImage(url)} onUploadMultiple={addGalleryImages} multiple={true} label="Add Gallery Photo" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {gallery.map((img) => (

@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../ui/Button';
 import ImageWithFallback from '../ui/ImageWithFallback';
 import { Hero } from '@/types';
@@ -11,44 +12,82 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ heroes }: HeroSectionProps) {
-  const rawHero = heroes && heroes.length > 0 ? heroes[0] : null;
+  // Safe filtering of active heroes
+  const activeHeroes = heroes && heroes.length > 0 
+    ? heroes.filter(h => h.is_active !== false) 
+    : [];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-slide every 6 seconds if there are multiple banners
+  useEffect(() => {
+    if (activeHeroes.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % activeHeroes.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [activeHeroes.length]);
+
+  const handlePrev = () => {
+    if (activeHeroes.length <= 1) return;
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + activeHeroes.length) % activeHeroes.length);
+  };
+
+  const handleNext = () => {
+    if (activeHeroes.length <= 1) return;
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % activeHeroes.length);
+  };
+
+  const currentHero = activeHeroes.length > 0 ? activeHeroes[currentIndex] : null;
 
   const hero = {
-    title: rawHero ? rawHero.title : 'Chasing the Light, Capturing the Soul',
-    subtitle: rawHero ? rawHero.subtitle : 'Premium editorial, wedding, and commercial photography tailored to your story.',
-    ctaButtonText: rawHero ? (rawHero.cta_text || (rawHero as any).ctaButtonText) : 'Book Your Session',
-    ctaButtonLink: rawHero ? (rawHero.cta_link || (rawHero as any).ctaButtonLink) : '/contact',
-    backgroundImage: rawHero ? (rawHero.background_image_url || (rawHero as any).backgroundImage) : undefined,
-    backgroundVideoUrl: rawHero ? (rawHero as any).backgroundVideoUrl : undefined,
+    title: currentHero ? currentHero.title : 'Chasing the Light, Capturing the Soul',
+    subtitle: currentHero ? currentHero.subtitle : 'Premium editorial, wedding, and commercial photography tailored to your story.',
+    ctaButtonText: currentHero ? (currentHero.cta_text || (currentHero as any).ctaButtonText) : 'Book Your Session',
+    ctaButtonLink: currentHero ? (currentHero.cta_link || (currentHero as any).ctaButtonLink) : '/contact',
+    backgroundImage: currentHero ? (currentHero.background_image_url || (currentHero as any).backgroundImage) : undefined,
+    backgroundVideoUrl: currentHero ? (currentHero as any).backgroundVideoUrl : undefined,
   };
 
   return (
     <section className="relative w-full h-screen overflow-hidden flex items-center bg-black">
       {/* Background Media */}
       <div className="absolute inset-0 w-full h-full z-0">
-        {hero.backgroundVideoUrl ? (
-          <video
-            src={hero.backgroundVideoUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover opacity-70"
-          />
-        ) : (
-          <ImageWithFallback
-            src={hero.backgroundImage}
-            fallbackType="hero"
-            fallbackIndex={0}
-            alt="Venner Photo Studio Hero Showcase"
-            fill
-            priority
-            className="opacity-65 object-cover"
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentHero ? currentHero.id : 'default'}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 0.85, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 1.2, ease: 'easeInOut' }}
+            className="absolute inset-0 w-full h-full"
+          >
+            {hero.backgroundVideoUrl ? (
+              <video
+                src={hero.backgroundVideoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <ImageWithFallback
+                src={hero.backgroundImage}
+                fallbackType="hero"
+                fallbackIndex={currentIndex % 5}
+                alt="Venner Photo Studio Hero Showcase"
+                fill
+                priority
+                className="object-cover"
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
         {/* Luxury Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-black/30 z-1" />
-        <div className="absolute inset-0 bg-black/15 z-1" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-1" />
+        <div className="absolute inset-0 bg-black/10 z-1" />
       </div>
 
       {/* Content Container */}
@@ -67,45 +106,76 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
             </span>
           </motion.div>
 
-          {/* Majestic Serif Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.4 }}
-            className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight tracking-tight text-white leading-[1.1] mb-6"
-          >
-            {hero.title}
-          </motion.h1>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentHero ? currentHero.id : 'default-text'}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+              {/* Majestic Serif Heading */}
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extralight tracking-tight text-white leading-[1.2] mb-5">
+                {hero.title}
+              </h1>
 
-          {/* Elegantly spaced body description */}
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.6 }}
-            className="font-sans text-sm sm:text-base md:text-lg text-neutral-200 font-light leading-relaxed mb-10 max-w-2xl"
-          >
-            {hero.subtitle || 'Bespoke editorial portfolios, high-fashion campaigns, and destination wedding captures engineered with unmatched passion.'}
-          </motion.p>
+              {/* Elegantly spaced body description */}
+              <p className="font-sans text-xs sm:text-sm md:text-base text-neutral-200/90 font-light leading-relaxed mb-8 max-w-xl">
+                {hero.subtitle}
+              </p>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6"
-          >
-            <Button variant="gold" size="lg" href={hero.ctaButtonLink || '/contact'}>
-              {hero.ctaButtonText || 'Book Session'}
-            </Button>
-            <Button variant="outline" size="lg" href="/portfolio">
-              Explore Work
-            </Button>
-          </motion.div>
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                <Button variant="gold" size="md" href={hero.ctaButtonLink || '/contact'}>
+                  {hero.ctaButtonText || 'Book Session'}
+                </Button>
+                <Button variant="outline" size="md" href="/portfolio">
+                  Explore Work
+                </Button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
+      {/* Navigation Arrows */}
+      {activeHeroes.length > 1 && (
+        <>
+          <button
+            onClick={handlePrev}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 border border-white/10 hover:border-[#C9A86C]/50 text-white/70 hover:text-[#C9A86C] transition-all duration-300 backdrop-blur-sm"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/60 border border-white/10 hover:border-[#C9A86C]/50 text-white/70 hover:text-[#C9A86C] transition-all duration-300 backdrop-blur-sm"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+        </>
+      )}
+
+      {/* Premium Slider Navigation Dots */}
+      {activeHeroes.length > 1 && (
+        <div className="absolute bottom-10 right-8 md:right-12 z-20 flex gap-2">
+          {activeHeroes.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                idx === currentIndex ? 'bg-[#C9A86C] w-6' : 'bg-white/30 hover:bg-white/60'
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Decorative vertical gold scroll indicator */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-3">
+      <div className="absolute bottom-10 left-8 md:left-12 z-10 flex flex-col items-center gap-3">
         <span className="text-[10px] text-white/40 tracking-[0.25em] uppercase font-sans [writing-mode:vertical-lr] select-none">
           Scroll Down
         </span>

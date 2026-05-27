@@ -68,6 +68,7 @@ export interface Service {
   short_description: string;
   full_description: string;
   hero_image_url: string;
+  thumbnail_image_url?: string;
   is_active: boolean;
   display_order: number;
   seo_title: string;

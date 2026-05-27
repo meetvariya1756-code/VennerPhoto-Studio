@@ -2,6 +2,7 @@ import React from 'react';
 import HeroSection from '@/components/home/HeroSection';
 import ServicesGrid from '@/components/home/ServicesGrid';
 import ReelsPreview from '@/components/home/ReelsPreview';
+import AutoScrollingReels from '@/components/home/AutoScrollingReels';
 import PortfolioPreview from '@/components/home/PortfolioPreview';
 import ProcessSection from '@/components/home/ProcessSection';
 import ContactCTA from '@/components/home/ContactCTA';
@@ -15,10 +16,10 @@ import {
   getTestimonials,
 } from '@/lib/db';
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export default async function HomePage() {
-  const [heroes, services, photos, reels, testimonials] = await Promise.all([
+  const [heroes, rawServices, photos, reels, testimonials] = await Promise.all([
     getHeroes(),
     getServices(),
     getFeaturedPortfolioPhotos(),
@@ -26,12 +27,35 @@ export default async function HomePage() {
     getTestimonials(),
   ]);
 
+  const services = rawServices.map((srv: any) => ({
+    ...srv,
+    _id: srv.id || srv._id,
+    slug: typeof srv.slug === 'object' && srv.slug ? srv.slug : { current: srv.slug },
+    heroImage: srv.hero_image_url || srv.heroImage,
+    shortDescription: srv.short_description || srv.shortDescription,
+  }));
+
+  const mappedReels = reels.map((r: any) => ({
+    ...r,
+    _id: r.id || r._id,
+    videoUrl: r.video_url || r.videoUrl,
+    thumbnailImage: r.thumbnail_url || r.thumbnailImage,
+    isFeatured: r.is_featured !== undefined ? r.is_featured : r.isFeatured,
+  }));
+
+  const mappedPhotos = photos.map((p: any) => ({
+    ...p,
+    _id: p.id || p._id,
+    image: p.image_url || p.image,
+    isFeatured: p.is_featured !== undefined ? p.is_featured : p.isFeatured,
+  }));
+
   return (
     <div className="w-full flex flex-col">
       <HeroSection heroes={heroes as any} />
       <ServicesGrid services={services as any} />
-      <ReelsPreview reels={reels as any} />
-      <PortfolioPreview photos={photos as any} />
+      <AutoScrollingReels reels={mappedReels as any} />
+      <PortfolioPreview photos={mappedPhotos as any} />
       <ProcessSection />
 
       {testimonials && testimonials.length > 0 && (

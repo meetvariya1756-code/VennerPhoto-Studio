@@ -32,7 +32,7 @@ export default function StudioInfo() {
           Venner Studio HQ
         </span>
         <h3 className="font-serif text-3xl font-light tracking-wide text-[#1A1A1A] mb-4">
-          Studio Headquarters
+          Studio Location
         </h3>
         <p className="text-neutral-500 text-sm leading-relaxed max-w-md">
           Located in Katargam, Surat, our boutique studio is equipped with high-grade lighting, professional backgrounds, and dynamic styling lounges. Consultations are available by appointment.

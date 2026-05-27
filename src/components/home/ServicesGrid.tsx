@@ -69,7 +69,7 @@ export default function ServicesGrid({ services }: ServicesGridProps) {
                 {/* Content Overlay */}
                 <div className="absolute inset-0 p-8 flex flex-col justify-end text-white z-10">
                   <span className="text-[#C9A86C] font-sans text-xs tracking-widest uppercase font-semibold mb-2">
-                    Collection {String(index + 1).padStart(2, '0')}
+                    {String(index + 1).padStart(2, '0')}
                   </span>
                   <h3 className="font-serif text-2xl font-light tracking-wide mb-3 group-hover:text-[#C9A86C] transition-colors">
                     {service.title}

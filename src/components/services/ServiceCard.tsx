@@ -28,7 +28,7 @@ export default function ServiceCard({ service, index }: ServiceCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-85" />
         <span className="absolute bottom-4 left-6 text-[#C9A86C] font-sans text-xs tracking-widest uppercase font-semibold">
-          COLLECTION {String(index + 1).padStart(2, '0')}
+          {String(index + 1).padStart(2, '0')}
         </span>
       </div>
 

@@ -5,7 +5,7 @@ import SectionHeader from '@/components/ui/SectionHeader';
 import { generateSiteMetadata } from '@/lib/metadata';
 import { getPortfolioPhotos } from '@/lib/db';
 
-export const revalidate = 600; // Cache portfolio page for 10 minutes
+export const revalidate = 0; // Disable cache to reflect live admin uploads instantly
 
 export const metadata: Metadata = generateSiteMetadata({
   title: 'Fine-Art Portfolio',
@@ -14,7 +14,14 @@ export const metadata: Metadata = generateSiteMetadata({
 });
 
 export default async function PortfolioPage() {
-  const photos = await getPortfolioPhotos();
+  const rawPhotos = await getPortfolioPhotos();
+  
+  // Normalize Supabase format to Sanity components expectation
+  const photos = rawPhotos.map((photo: any) => ({
+    ...photo,
+    _id: photo.id || photo._id,
+    image: photo.image_url || photo.image,
+  }));
 
   return (
     <div className="pt-28 pb-24 bg-[#F9F7F4] text-[#1A1A1A]">
@@ -26,7 +33,7 @@ export default async function PortfolioPage() {
         />
 
         {/* Dynamic filters and masonry grid and lightboxes */}
-        <PortfolioGrid photos={photos} />
+        <PortfolioGrid photos={photos as any} />
       </div>
     </div>
   );

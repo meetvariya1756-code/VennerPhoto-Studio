@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 // Re-declare schema for server-side validation checks
 import * as zod from 'zod';
@@ -28,6 +29,22 @@ export async function POST(request: Request) {
     }
 
     const { name, email, phone, service, date, location, message } = parsed.data;
+
+    // 1.5. Save inquiry to Supabase database
+    try {
+      const sb = await createServerSupabaseClient();
+      await sb.from('contact_inquiries').insert({
+        name,
+        email,
+        phone,
+        service,
+        date,
+        location: location || null,
+        message,
+      });
+    } catch (dbErr) {
+      console.error('Database insertion failed for contact inquiry:', dbErr);
+    }
 
     // 2. Transmit email via Resend if API key is provided
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -77,6 +94,33 @@ export async function POST(request: Request) {
       console.log('Event Location:', location || 'Not Specified');
       console.log('Message Detail:', message);
       console.log('--- [MOCK TRANSMISSION COMPLETE] ---');
+    }
+
+    // 3. Send automated WhatsApp notification to admin via Twilio (if credentials configured)
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioFrom = process.env.TWILIO_FROM_NUMBER || 'whatsapp:+14155238886'; // Default Twilio sandbox number
+    const adminWaNumber = process.env.ADMIN_WHATSAPP_NUMBER || 'whatsapp:+919825983437';
+
+    if (twilioSid && twilioAuthToken) {
+      try {
+        const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+        const body = new URLSearchParams();
+        body.append('To', adminWaNumber);
+        body.append('From', twilioFrom);
+        body.append('Body', `🔔 *New Booking Inquiry Received!*\n\n• *Client:* ${name}\n• *Service:* ${service.replace(/-/g, ' ').toUpperCase()}\n• *Phone:* ${phone}\n\nA new client query has arrived! Check your Admin Dashboard for details.`);
+
+        await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + Buffer.from(`${twilioSid}:${twilioAuthToken}`).toString('base64'),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: body.toString()
+        });
+      } catch (waErr) {
+        console.error('Failed to send backend WhatsApp notification via Twilio:', waErr);
+      }
     }
 
     return NextResponse.json({ success: true, message: 'Inquiry processed successfully' }, { status: 200 });

@@ -9,6 +9,7 @@ interface ImageWithFallbackProps extends Omit<ImageProps, 'src'> {
   src?: any; // Sanity Image object or local string url
   fallbackType?: 'photo' | 'avatar' | 'video-thumb' | 'logo' | 'hero';
   fallbackIndex?: number;
+  objectFit?: 'cover' | 'contain';
 }
 
 export default function ImageWithFallback({
@@ -17,6 +18,7 @@ export default function ImageWithFallback({
   fallbackIndex = 0,
   alt = 'Venner Photography Asset',
   className,
+  objectFit = 'cover',
   ...props
 }: ImageWithFallbackProps) {
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,8 @@ export default function ImageWithFallback({
         src={resolvedSrc}
         alt={alt}
         className={cn(
-          'transition-all duration-700 ease-out object-cover',
+          'transition-all duration-700 ease-out',
+          objectFit === 'contain' ? 'object-contain' : 'object-cover',
           loading ? 'scale-105 blur-sm' : 'scale-100 blur-0'
         )}
         onLoad={() => setLoading(false)}

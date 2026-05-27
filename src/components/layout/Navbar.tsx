@@ -90,13 +90,12 @@ export default function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="group flex flex-col">
-            <span className="font-serif text-xl md:text-2xl tracking-wider text-white uppercase font-light group-hover:text-[#C9A86C] transition-colors">
-              Venner
-            </span>
-            <span className="text-[9px] font-sans tracking-[0.3em] text-[#C9A86C] uppercase -mt-0.5">
-              Photo Studio
-            </span>
+          <Link href="/" className="group flex items-center">
+            <img
+              src="/logo.png"
+              alt="Venner Photo Studio Logo"
+              className="h-16 md:h-22 w-auto object-contain transition-transform duration-300 group-hover:scale-103"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -193,11 +192,11 @@ export default function Navbar() {
       {/* Mobile Full-Screen Overlay Menu */}
       <div
         className={cn(
-          'fixed inset-0 z-40 bg-[#1A1A1A] flex flex-col justify-center px-12 md:px-24 transition-all duration-500 ease-in-out lg:hidden',
+          'fixed inset-0 z-40 bg-[#1A1A1A] flex flex-col justify-start overflow-y-auto pt-28 pb-12 px-12 md:px-24 transition-all duration-500 ease-in-out lg:hidden',
           isOpen ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-105'
         )}
       >
-        <nav className="flex flex-col gap-6 text-left my-8">
+        <nav className="flex flex-col gap-6 text-left my-4">
           {navLinks.map((link) => {
             if (link.dropdown) {
               return (
