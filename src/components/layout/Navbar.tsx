@@ -6,9 +6,10 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Button from '../ui/Button';
+import { createClient } from '@/lib/supabase';
 
-// Mock list of services for dropdown
-const SERVICE_LINKS = [
+// Fallback list of services for dropdown when Supabase is not configured
+const FALLBACK_SERVICE_LINKS = [
   { title: 'Wedding Photography', slug: 'wedding-photography' },
   { title: 'Engagement Photography', slug: 'engagement-photography' },
   { title: 'Baby Shower Photography', slug: 'baby-shower-photography' },
@@ -23,6 +24,46 @@ const SERVICE_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [serviceLinks, setServiceLinks] = useState(FALLBACK_SERVICE_LINKS);
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const isSupabaseConfigured =
+          !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
+          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
+
+        if (!isSupabaseConfigured) return;
+
+        const sb = createClient();
+        const { data, error } = await sb
+          .from('services')
+          .select('title, slug')
+          .eq('is_active', true)
+          .order('display_order');
+
+        if (error) {
+          console.error('Error fetching services for navbar:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setServiceLinks(
+            data.map((s: any) => ({
+              title: s.title,
+              slug: s.slug,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to fetch services:', err);
+      }
+    }
+
+    fetchServices();
+  }, []);
 
   // Do not render navbar in admin dashboard or sanity studio
   if (pathname.startsWith('/admin') || pathname.startsWith('/studio')) {
@@ -146,7 +187,7 @@ export default function Navbar() {
                     >
                       <div className="bg-[#1A1A1A] border border-neutral-800 shadow-2xl p-2">
                         <div className="grid grid-cols-1 gap-0.5">
-                          {SERVICE_LINKS.map((service) => (
+                          {serviceLinks.map((service) => (
                             <Link
                               key={service.slug}
                               href={`/services/${service.slug}`}
@@ -218,7 +259,7 @@ export default function Navbar() {
                     {link.title}
                   </span>
                   <div className="pl-4 grid grid-cols-1 sm:grid-cols-2 gap-2 border-l border-[#C9A86C]/30 my-1">
-                    {SERVICE_LINKS.map((service) => (
+                    {serviceLinks.map((service) => (
                       <Link
                         key={service.slug}
                         href={`/services/${service.slug}`}

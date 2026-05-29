@@ -4,9 +4,60 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Instagram, Facebook, Youtube, Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { createClient } from '@/lib/supabase';
+
+const FALLBACK_SERVICES = [
+  { title: 'Wedding Photography', href: '/services/wedding-photography' },
+  { title: 'Engagement Shoots', href: '/services/engagement-photography' },
+  { title: 'Baby Shower Portraits', href: '/services/baby-shower-photography' },
+  { title: 'Indoor Studio Sessions', href: '/services/indoor-studio-photography' },
+  { title: 'Product & Brand Shoot', href: '/services/product-photography' },
+  { title: 'Modeling Portfolio', href: '/services/modeling-photography' },
+];
 
 export default function Footer() {
   const pathname = usePathname();
+  const [services, setServices] = React.useState(FALLBACK_SERVICES);
+
+  React.useEffect(() => {
+    async function fetchServices() {
+      try {
+        const isSupabaseConfigured =
+          !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
+          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
+
+        if (!isSupabaseConfigured) return;
+
+        const sb = createClient();
+        const { data, error } = await sb
+          .from('services')
+          .select('title, slug')
+          .eq('is_active', true)
+          .order('display_order')
+          .limit(6);
+
+        if (error) {
+          console.error('Error fetching services for footer:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setServices(
+            data.map((s: any) => ({
+              title: s.title,
+              href: `/services/${s.slug}`,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to fetch services for footer:', err);
+      }
+    }
+
+    fetchServices();
+  }, []);
 
   // Do not render footer in admin dashboard or sanity studio
   if (pathname.startsWith('/admin') || pathname.startsWith('/studio')) {
@@ -19,15 +70,6 @@ export default function Footer() {
     { title: 'Video Reels', href: '/reels' },
     { title: 'Our Team', href: '/team' },
     { title: 'Contact Us', href: '/contact' },
-  ];
-
-  const services = [
-    { title: 'Wedding Photography', href: '/services/wedding-photography' },
-    { title: 'Engagement Shoots', href: '/services/engagement-photography' },
-    { title: 'Baby Shower Portraits', href: '/services/baby-shower-photography' },
-    { title: 'Indoor Studio Sessions', href: '/services/indoor-studio-photography' },
-    { title: 'Product & Brand Shoot', href: '/services/product-photography' },
-    { title: 'Modeling Portfolio', href: '/services/modeling-photography' },
   ];
 
   return (

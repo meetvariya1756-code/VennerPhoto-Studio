@@ -33,6 +33,20 @@ function normalizeService(srv: any) {
       : srv.fullDescription,
     isActive: srv.is_active !== undefined ? srv.is_active : srv.isActive,
     order: srv.display_order !== undefined ? srv.display_order : srv.order,
+    packages: srv.packages
+      ? srv.packages.map((pkg: any) => ({
+          ...pkg,
+          packageName: pkg.package_name || pkg.packageName,
+          price: pkg.price,
+          features: pkg.features || [],
+        }))
+      : undefined,
+    gallery: srv.gallery
+      ? srv.gallery.map((img: any) => ({
+          ...img,
+          image_url: img.image_url || img.image || (img.asset?._ref),
+        }))
+      : undefined,
   };
 }
 
