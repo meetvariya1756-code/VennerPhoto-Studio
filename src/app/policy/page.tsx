@@ -94,7 +94,7 @@ export default async function PolicyPage() {
   }
 
   return (
-    <div className="pt-32 pb-24 bg-[#F9F7F4] text-[#1A1A1A] min-h-screen">
+    <div className="pt-44 md:pt-52 pb-24 bg-[#F9F7F4] text-[#1A1A1A] min-h-screen">
       <div className="max-w-4xl mx-auto px-6 md:px-8">
         <SectionHeader
           title="Privacy Policy & Terms"
