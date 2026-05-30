@@ -40,6 +40,7 @@ export interface Hero {
   cta_text: string;
   cta_link: string;
   background_image_url: string;
+  mobile_background_image_url?: string;
   is_active: boolean;
   display_order: number;
 }
@@ -146,6 +147,7 @@ const MOCK_HEROES: Hero[] = [
     cta_text: 'Book Your Session',
     cta_link: '/contact',
     background_image_url: getMockPlaceholder('hero', 0),
+    mobile_background_image_url: getMockPlaceholder('hero', 0),
     is_active: true,
     display_order: 1,
   },
@@ -156,6 +158,7 @@ const MOCK_HEROES: Hero[] = [
     cta_text: 'Explore Portfolio',
     cta_link: '/portfolio',
     background_image_url: getMockPlaceholder('hero', 1),
+    mobile_background_image_url: getMockPlaceholder('hero', 1),
     is_active: true,
     display_order: 2,
   },

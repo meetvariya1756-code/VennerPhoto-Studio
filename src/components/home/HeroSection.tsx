@@ -46,6 +46,7 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
     ctaButtonText: currentHero ? ((currentHero as any).cta_text || (currentHero as any).ctaButtonText) : 'Book Your Session',
     ctaButtonLink: currentHero ? ((currentHero as any).cta_link || (currentHero as any).ctaButtonLink) : '/contact',
     backgroundImage: currentHero ? ((currentHero as any).background_image_url || (currentHero as any).backgroundImage) : undefined,
+    mobileBackgroundImage: currentHero ? ((currentHero as any).mobile_background_image_url || (currentHero as any).mobileBackgroundImage) : undefined,
     backgroundVideoUrl: currentHero ? (currentHero as any).backgroundVideoUrl : undefined,
   };
 
@@ -72,15 +73,32 @@ export default function HeroSection({ heroes }: HeroSectionProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <ImageWithFallback
-                src={hero.backgroundImage}
-                fallbackType="hero"
-                fallbackIndex={currentIndex % 5}
-                alt="Venner Photo Studio Hero Showcase"
-                fill
-                priority
-                className="object-cover"
-              />
+              <div className="absolute inset-0 w-full h-full">
+                {/* Desktop Background Image (Hidden on mobile) */}
+                <div className="hidden md:block absolute inset-0 w-full h-full">
+                  <ImageWithFallback
+                    src={hero.backgroundImage}
+                    fallbackType="hero"
+                    fallbackIndex={currentIndex % 5}
+                    alt="Venner Photo Studio Hero Showcase"
+                    fill
+                    priority
+                    className="object-cover"
+                  />
+                </div>
+                {/* Mobile Background Image (Shown only on mobile, fallback to desktop) */}
+                <div className="block md:hidden absolute inset-0 w-full h-full">
+                  <ImageWithFallback
+                    src={hero.mobileBackgroundImage || hero.backgroundImage}
+                    fallbackType="hero"
+                    fallbackIndex={currentIndex % 5}
+                    alt="Venner Photo Studio Hero Showcase Mobile"
+                    fill
+                    priority
+                    className="object-cover"
+                  />
+                </div>
+              </div>
             )}
           </motion.div>
         </AnimatePresence>

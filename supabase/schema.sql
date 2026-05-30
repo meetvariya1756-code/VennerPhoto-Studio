@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS heroes (
   cta_text TEXT DEFAULT 'Book Your Session',
   cta_link TEXT DEFAULT '/contact',
   background_image_url TEXT DEFAULT '',
+  mobile_background_image_url TEXT DEFAULT '',
   is_active BOOLEAN DEFAULT TRUE,
   display_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -12,6 +12,7 @@ export interface Hero {
   title: string;
   subtitle?: string;
   backgroundImage?: SanityImage;
+  mobileBackgroundImage?: SanityImage;
   backgroundVideoUrl?: string; // custom URL if using Cloudinary
   ctaButtonText?: string;
   ctaButtonLink?: string;

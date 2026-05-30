@@ -12,6 +12,7 @@ interface Hero {
   cta_text: string;
   cta_link: string;
   background_image_url: string;
+  mobile_background_image_url?: string;
   is_active: boolean;
   display_order: number;
 }
@@ -22,6 +23,7 @@ const EMPTY_HERO: Hero = {
   cta_text: 'Book Your Session',
   cta_link: '/contact',
   background_image_url: '',
+  mobile_background_image_url: '',
   is_active: true,
   display_order: 0,
 };
@@ -88,9 +90,20 @@ export default function HeroesAdminPage() {
         )}
         {heroes.map((hero) => (
           <div key={hero.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden flex items-center gap-4 p-4 group shadow-sm">
-            {hero.background_image_url && (
-              <img src={hero.background_image_url} alt="" className="w-24 h-16 object-cover rounded-lg shrink-0" />
-            )}
+            <div className="flex gap-2 shrink-0">
+              {hero.background_image_url && (
+                <div className="relative">
+                  <img src={hero.background_image_url} alt="Desktop" className="w-20 h-14 object-cover rounded-lg border border-neutral-200" />
+                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded font-semibold">Desk</span>
+                </div>
+              )}
+              {hero.mobile_background_image_url && (
+                <div className="relative">
+                  <img src={hero.mobile_background_image_url} alt="Mobile" className="w-10 h-14 object-cover rounded-lg border border-neutral-200" />
+                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded font-semibold">Mob</span>
+                </div>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-[#1A1A1A] font-semibold text-sm truncate">{hero.title}</p>
               <p className="text-neutral-400 text-xs truncate mt-0.5">{hero.subtitle}</p>
@@ -136,7 +149,10 @@ export default function HeroesAdminPage() {
                   <input value={editing.cta_link} onChange={e => setEditing({ ...editing, cta_link: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
                 </div>
               </div>
-              <MediaUpload type="image" folder="heroes" currentUrl={editing.background_image_url} onUpload={url => setEditing({ ...editing, background_image_url: url })} label="Background Image" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <MediaUpload type="image" folder="heroes" currentUrl={editing.background_image_url} onUpload={url => setEditing({ ...editing, background_image_url: url })} label="Desktop Background Image *" />
+                <MediaUpload type="image" folder="heroes" currentUrl={editing.mobile_background_image_url || ''} onUpload={url => setEditing({ ...editing, mobile_background_image_url: url })} label="Mobile Background Image (Optional)" />
+              </div>
               <div className="flex items-center gap-3">
                 <input type="checkbox" id="active" checked={editing.is_active} onChange={e => setEditing({ ...editing, is_active: e.target.checked })} className="w-4 h-4 accent-[#C9A86C]" />
                 <label htmlFor="active" className="text-sm text-neutral-600">Active (visible on website)</label>
