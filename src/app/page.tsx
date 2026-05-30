@@ -7,23 +7,26 @@ import PortfolioPreview from '@/components/home/PortfolioPreview';
 import ProcessSection from '@/components/home/ProcessSection';
 import ContactCTA from '@/components/home/ContactCTA';
 import TestimonialSlider from '@/components/home/TestimonialSlider';
+import BeforeAfterSection from '@/components/home/BeforeAfterSection';
 import {
   getHeroes,
   getServices,
   getFeaturedPortfolioPhotos,
   getReels,
   getTestimonials,
+  getBeforeAfterComparisons,
 } from '@/lib/db';
 
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const [heroes, rawServices, photos, reels, testimonials] = await Promise.all([
+  const [heroes, rawServices, photos, reels, testimonials, comparisons] = await Promise.all([
     getHeroes(),
     getServices(),
     getFeaturedPortfolioPhotos(),
     getReels(),
     getTestimonials(),
+    getBeforeAfterComparisons(),
   ]);
 
   const services = rawServices.map((srv: any) => ({
@@ -53,6 +56,7 @@ export default async function HomePage() {
     <div className="w-full flex flex-col">
       <HeroSection heroes={heroes as any} />
       <ServicesGrid services={services as any} />
+      <BeforeAfterSection comparisons={comparisons} />
       <AutoScrollingReels reels={mappedReels as any} />
       <PortfolioPreview photos={mappedPhotos as any} />
       <ProcessSection />

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Settings, Image, Film, Users, MessageSquare,
-  Camera, LogOut, ChevronRight, Menu, X, Layers, Mail
+  Camera, LogOut, ChevronRight, Menu, X, Layers, Mail, Columns
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/admin/services', label: 'Services', icon: Camera },
   { href: '/admin/portfolio', label: 'Portfolio', icon: Image },
   { href: '/admin/reels', label: 'Video Reels', icon: Film },
+  { href: '/admin/before-after', label: 'Before/After Showcase', icon: Columns },
   { href: '/admin/team', label: 'Team Members', icon: Users },
   { href: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
   { href: '/admin/inquiries', label: 'Contact Inquiries', icon: Mail },

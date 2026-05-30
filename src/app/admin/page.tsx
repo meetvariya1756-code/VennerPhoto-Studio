@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { Camera, Image, Film, Users, MessageSquare, Layers, Settings, ArrowRight, AlertCircle, Mail } from 'lucide-react';
+import { Camera, Image, Film, Users, MessageSquare, Layers, Settings, ArrowRight, AlertCircle, Mail, Columns } from 'lucide-react';
 
 const isSupabaseConfigured =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -11,7 +11,7 @@ async function getStats() {
   if (!isSupabaseConfigured) return null;
   try {
     const sb = await createServerSupabaseClient();
-    const [photos, services, reels, team, testimonials, heroes, inquiries] = await Promise.all([
+    const [photos, services, reels, team, testimonials, heroes, inquiries, comparisons] = await Promise.all([
       sb.from('portfolio_photos').select('id', { count: 'exact', head: true }),
       sb.from('services').select('id', { count: 'exact', head: true }),
       sb.from('reels').select('id', { count: 'exact', head: true }),
@@ -19,6 +19,7 @@ async function getStats() {
       sb.from('testimonials').select('id', { count: 'exact', head: true }),
       sb.from('heroes').select('id', { count: 'exact', head: true }),
       sb.from('contact_inquiries').select('id', { count: 'exact', head: true }),
+      sb.from('before_after_comparisons').select('id', { count: 'exact', head: true }),
     ]);
     return {
       photos: photos.count || 0,
@@ -28,6 +29,7 @@ async function getStats() {
       testimonials: testimonials.count || 0,
       heroes: heroes.count || 0,
       inquiries: inquiries?.count || 0,
+      comparisons: comparisons?.count || 0,
     };
   } catch {
     return null;
@@ -40,6 +42,7 @@ const SECTIONS = [
   { href: '/admin/services', label: 'Services', icon: Camera, description: 'Photography categories, descriptions, galleries & pricing' },
   { href: '/admin/portfolio', label: 'Portfolio', icon: Image, description: 'Upload and manage portfolio photo collection' },
   { href: '/admin/reels', label: 'Video Reels', icon: Film, description: 'Upload and manage cinematic video reels' },
+  { href: '/admin/before-after', label: 'Before/After Showcase', icon: Columns, description: 'Manage before/after raw vs retouched sliders' },
   { href: '/admin/team', label: 'Team Members', icon: Users, description: 'Photographers, retouchers and studio artists' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare, description: 'Client reviews and ratings' },
   { href: '/admin/inquiries', label: 'Contact Inquiries', icon: Mail, description: 'View client booking inquiries and messages' },
@@ -77,12 +80,13 @@ export default async function AdminDashboard() {
 
       {/* Stats Grid */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
           {[
             { label: 'Heroes', value: stats.heroes, icon: Layers },
             { label: 'Services', value: stats.services, icon: Camera },
             { label: 'Photos', value: stats.photos, icon: Image },
             { label: 'Reels', value: stats.reels, icon: Film },
+            { label: 'Sliders', value: stats.comparisons, icon: Columns },
             { label: 'Team', value: stats.team, icon: Users },
             { label: 'Reviews', value: stats.testimonials, icon: MessageSquare },
             { label: 'Inquiries', value: stats.inquiries, icon: Mail },

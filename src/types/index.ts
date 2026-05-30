@@ -100,3 +100,13 @@ export interface SiteSettings {
   youtubeUrl?: string;
   googleMapEmbedUrl?: string;
 }
+
+export interface BeforeAfterComparison {
+  _id: string;
+  title: string;
+  description?: string;
+  beforeImage: string;
+  afterImage: string;
+  isActive: boolean;
+  order: number;
+}

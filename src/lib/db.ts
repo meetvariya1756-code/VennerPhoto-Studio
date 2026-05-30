@@ -119,6 +119,16 @@ export interface Testimonial {
   is_active: boolean;
 }
 
+export interface BeforeAfterComparison {
+  id: string;
+  title: string;
+  description: string;
+  before_image_url: string;
+  after_image_url: string;
+  is_active: boolean;
+  display_order: number;
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // MOCK DATA FALLBACKS
 // ─────────────────────────────────────────────────────────────────────
@@ -205,6 +215,27 @@ const MOCK_TESTIMONIALS: Testimonial[] = [
   { id: 'ts1', client_name: 'Alexander & Evelyn', service_type: 'Wedding Photography', quote: 'Our wedding album is a masterpiece. Julian did not just take photos; he captured the exact emotions we felt.', rating: 5, is_active: true },
   { id: 'ts2', client_name: 'Nouveau Couture', service_type: 'Product Photography', quote: 'Stunning commercial results! Our website conversion rate increased by 40% after posting Venner Photo Studio\'s portfolios.', rating: 5, is_active: true },
   { id: 'ts3', client_name: 'Clara Bennett', service_type: 'Maternity Photography', quote: 'Sophia made me feel incredibly comfortable, and the maternity shoot is absolutely breathtaking.', rating: 5, is_active: true },
+];
+
+const MOCK_COMPARISONS: BeforeAfterComparison[] = [
+  {
+    id: 'mc1',
+    title: 'Outdoor Golden Hour Retouch',
+    description: 'Enhancing warm skin tones, golden hour contrast, and soft background details while retaining realistic hair and skin textures.',
+    before_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80&sat=-50',
+    after_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80',
+    is_active: true,
+    display_order: 1
+  },
+  {
+    id: 'mc2',
+    title: 'Controlled Studio Lighting',
+    description: 'Balancing skin smooth tones, highlights, shadow depths, and modern fashion background color-grading.',
+    before_image_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80&sat=-40&contrast=10',
+    after_image_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80',
+    is_active: true,
+    display_order: 2
+  }
 ];
 
 // ─────────────────────────────────────────────────────────────────────
@@ -315,4 +346,11 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     const sb = await createServerSupabaseClient();
     return sb.from('testimonials').select('*').eq('is_active', true).order('created_at', { ascending: false });
   }, MOCK_TESTIMONIALS);
+}
+
+export async function getBeforeAfterComparisons(): Promise<BeforeAfterComparison[]> {
+  return safeQuery(async () => {
+    const sb = await createServerSupabaseClient();
+    return sb.from('before_after_comparisons').select('*').eq('is_active', true).order('display_order');
+  }, MOCK_COMPARISONS);
 }
