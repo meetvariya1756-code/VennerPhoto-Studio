@@ -11,6 +11,7 @@ import { MOCK_DATA } from '@/lib/sanity';
 
 // Allow dynamic rendering for any slug not in generateStaticParams
 export const dynamicParams = true;
+export const revalidate = 86400; // Cache on edge CDN for 24 hours, revalidated on-demand
 
 interface ServicePageProps {
   params: {

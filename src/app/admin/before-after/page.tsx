@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, Columns } from 'lucide-react';
+import { triggerRevalidation } from '@/lib/revalidate';
 
 interface BeforeAfterComparison {
   id?: string;
@@ -64,6 +65,7 @@ export default function BeforeAfterAdminPage() {
     } else {
       setEditing(null);
       load();
+      triggerRevalidation();
     }
     setSaving(false);
   };
@@ -73,6 +75,7 @@ export default function BeforeAfterAdminPage() {
     const sb = createClient();
     await sb.from('before_after_comparisons').delete().eq('id', id);
     load();
+    triggerRevalidation();
   };
 
   if (loading) {

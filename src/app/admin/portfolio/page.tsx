@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Plus, Trash2, Loader2, Save, X, Upload, Star } from 'lucide-react';
+import { triggerRevalidation } from '@/lib/revalidate';
 
 interface Photo {
   id?: string;
@@ -89,6 +90,7 @@ export default function PortfolioAdminPage() {
     await Promise.all(uploads);
     setUploading(false);
     load();
+    triggerRevalidation();
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -100,7 +102,7 @@ export default function PortfolioAdminPage() {
       ? await sb.from('portfolio_photos').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
       : await sb.from('portfolio_photos').insert(editing);
     if (err) setError(err.message);
-    else { setEditing(null); load(); }
+    else { setEditing(null); load(); triggerRevalidation(); }
     setSaving(false);
   };
 
@@ -108,11 +110,13 @@ export default function PortfolioAdminPage() {
     if (!confirm('Delete this photo?')) return;
     await createClient().from('portfolio_photos').delete().eq('id', id);
     load();
+    triggerRevalidation();
   };
 
   const toggleFeatured = async (photo: Photo) => {
     await createClient().from('portfolio_photos').update({ is_featured: !photo.is_featured }).eq('id', photo.id!);
     load();
+    triggerRevalidation();
   };
 
   const filtered = filter === 'all' ? photos : photos.filter(p => p.category === filter);

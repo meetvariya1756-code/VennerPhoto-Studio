@@ -48,28 +48,16 @@ export default function WeddingHighlightsSection({ highlights }: WeddingHighligh
               onClick={() => setActiveVideoUrl(highlight.video_url)}
               className="w-[280px] sm:w-[380px] aspect-[16/9] relative flex-shrink-0 cursor-pointer overflow-hidden rounded-none border border-neutral-800 hover:border-[#C9A86C]/50 transition-all duration-500 hover:scale-[1.03] shadow-2xl group"
             >
-              {/* Cover Thumbnail or Live looping muted background video */}
-              {highlight.thumbnail_url ? (
-                <ImageWithFallback
-                  src={highlight.thumbnail_url}
-                  fallbackType="video-thumb"
-                  fallbackIndex={idx % 5}
-                  alt={highlight.title}
-                  fill
-                  sizes="(max-width: 640px) 280px, 380px"
-                  className="group-hover:scale-105 transition-transform duration-700 ease-out object-cover"
-                />
-              ) : (
-                <video
-                  src={highlight.video_url}
-                  preload="metadata"
-                  muted
-                  playsInline
-                  loop
-                  autoPlay
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-              )}
+              {/* Highly optimized static card thumbnail cover to prevent multiple video element bottlenecks */}
+              <ImageWithFallback
+                src={highlight.thumbnail_url}
+                fallbackType="video-thumb"
+                fallbackIndex={idx % 5}
+                alt={highlight.title}
+                fill
+                sizes="(max-width: 640px) 280px, 380px"
+                className="group-hover:scale-105 transition-transform duration-700 ease-out object-cover"
+              />
 
               {/* Muted video overlay on hover */}
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors duration-300 flex flex-col justify-between p-4 sm:p-5">

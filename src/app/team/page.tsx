@@ -5,7 +5,7 @@ import SectionHeader from '@/components/ui/SectionHeader';
 import { generateSiteMetadata } from '@/lib/metadata';
 import { getTeamMembers } from '@/lib/sanity.queries';
 
-export const revalidate = 3600;
+export const revalidate = 86400; // Cache on edge CDN for 24 hours, revalidated on-demand
 
 export const metadata: Metadata = generateSiteMetadata({
   title: 'Our Creative Team',

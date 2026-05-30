@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, Film, Video, Eye, EyeOff } from 'lucide-react';
+import { triggerRevalidation } from '@/lib/revalidate';
 
 interface WeddingHighlight {
   id?: string;
@@ -80,6 +81,7 @@ export default function WeddingHighlightsAdminPage() {
     } else {
       setEditing(null);
       load();
+      triggerRevalidation();
     }
     setSaving(false);
   };
@@ -92,6 +94,7 @@ export default function WeddingHighlightsAdminPage() {
       alert(`Failed to delete: ${err.message}`);
     } else {
       load();
+      triggerRevalidation();
     }
   };
 

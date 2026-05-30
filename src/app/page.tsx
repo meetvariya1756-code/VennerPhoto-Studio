@@ -19,7 +19,7 @@ import {
   getWeddingHighlights,
 } from '@/lib/db';
 
-export const revalidate = 0;
+export const revalidate = 86400; // Cache on edge CDN for 24 hours, revalidated on-demand
 
 export default async function HomePage() {
   const [heroes, rawServices, photos, reels, testimonials, comparisons, highlights] = await Promise.all([

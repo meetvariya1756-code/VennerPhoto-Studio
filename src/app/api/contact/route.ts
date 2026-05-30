@@ -15,6 +15,15 @@ const contactServerSchema = zod.object({
   message: zod.string().min(10),
 });
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -30,17 +39,26 @@ export async function POST(request: Request) {
 
     const { name, email, phone, service, date, location, message } = parsed.data;
 
+    // Sanitize user inputs to prevent XSS / HTML Injection attacks
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safePhone = escapeHtml(phone);
+    const safeService = escapeHtml(service);
+    const safeDate = escapeHtml(date);
+    const safeLocation = location ? escapeHtml(location) : '';
+    const safeMessage = escapeHtml(message);
+
     // 1.5. Save inquiry to Supabase database
     try {
       const sb = await createServerSupabaseClient();
       await sb.from('contact_inquiries').insert({
-        name,
-        email,
-        phone,
-        service,
-        date,
-        location: location || null,
-        message,
+        name: safeName,
+        email: safeEmail,
+        phone: safePhone,
+        service: safeService,
+        date: safeDate,
+        location: safeLocation || null,
+        message: safeMessage,
       });
     } catch (dbErr) {
       console.error('Database insertion failed for contact inquiry:', dbErr);
@@ -56,19 +74,19 @@ export async function POST(request: Request) {
       const emailResult = await resend.emails.send({
         from: 'Venner Studio Contact Form <onboarding@resend.dev>', // Resend verified domain required for custom domains
         to: studioEmail,
-        subject: `New Client Booking Inquiry: ${name}`,
+        subject: `New Client Booking Inquiry: ${safeName}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eeeeee;">
             <h2 style="color: #1A1A1A; border-bottom: 2px solid #C9A86C; padding-bottom: 10px;">New Booking Inquiry</h2>
-            <p><strong>Client Name:</strong> ${name}</p>
-            <p><strong>Email Address:</strong> ${email}</p>
-            <p><strong>Phone Number:</strong> ${phone}</p>
-            <p><strong>Photography Service:</strong> ${service}</p>
-            <p><strong>Event / Session Date:</strong> ${date}</p>
-            <p><strong>Location:</strong> ${location || 'Not Specified'}</p>
+            <p><strong>Client Name:</strong> ${safeName}</p>
+            <p><strong>Email Address:</strong> ${safeEmail}</p>
+            <p><strong>Phone Number:</strong> ${safePhone}</p>
+            <p><strong>Photography Service:</strong> ${safeService}</p>
+            <p><strong>Event / Session Date:</strong> ${safeDate}</p>
+            <p><strong>Location:</strong> ${safeLocation || 'Not Specified'}</p>
             <p style="margin-top: 20px;"><strong>Client Message:</strong></p>
             <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #C9A86C; font-style: italic;">
-              ${message.replace(/\n/g, '<br />')}
+              ${safeMessage.replace(/\n/g, '<br />')}
             </div>
             <p style="color: #a0a0a0; font-size: 11px; margin-top: 30px;">
               This notification was generated automatically by the contact form on vennerphotostudio.com.
@@ -86,13 +104,13 @@ export async function POST(request: Request) {
     } else {
       // High-fidelity fallback console log in development environment when no Resend key is connected
       console.log('--- [MOCK TRANSMISSION] Contact Form Submitted ---');
-      console.log('Client Name:', name);
-      console.log('Client Email:', email);
-      console.log('Client Phone:', phone);
-      console.log('Service Category:', service);
-      console.log('Event Date:', date);
-      console.log('Event Location:', location || 'Not Specified');
-      console.log('Message Detail:', message);
+      console.log('Client Name:', safeName);
+      console.log('Client Email:', safeEmail);
+      console.log('Client Phone:', safePhone);
+      console.log('Service Category:', safeService);
+      console.log('Event Date:', safeDate);
+      console.log('Event Location:', safeLocation || 'Not Specified');
+      console.log('Message Detail:', safeMessage);
       console.log('--- [MOCK TRANSMISSION COMPLETE] ---');
     }
 
@@ -108,7 +126,7 @@ export async function POST(request: Request) {
         const body = new URLSearchParams();
         body.append('To', adminWaNumber);
         body.append('From', twilioFrom);
-        body.append('Body', `🔔 *New Booking Inquiry Received!*\n\n• *Client:* ${name}\n• *Service:* ${service.replace(/-/g, ' ').toUpperCase()}\n• *Phone:* ${phone}\n\nA new client query has arrived! Check your Admin Dashboard for details.`);
+        body.append('Body', `🔔 *New Booking Inquiry Received!*\n\n• *Client:* ${safeName}\n• *Service:* ${safeService.replace(/-/g, ' ').toUpperCase()}\n• *Phone:* ${safePhone}\n\nA new client query has arrived! Check your Admin Dashboard for details.`);
 
         await fetch(url, {
           method: 'POST',

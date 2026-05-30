@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, Film } from 'lucide-react';
 import { getMockPlaceholder } from '@/lib/utils';
+import { triggerRevalidation } from '@/lib/revalidate';
 
 interface Reel {
   id?: string;
@@ -64,7 +65,7 @@ export default function ReelsAdminPage() {
       ? await sb.from('reels').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
       : await sb.from('reels').insert({ ...editing, published_at: new Date().toISOString() });
     if (err) setError(err.message);
-    else { setEditing(null); load(); }
+    else { setEditing(null); load(); triggerRevalidation(); }
     setSaving(false);
   };
 
@@ -72,6 +73,7 @@ export default function ReelsAdminPage() {
     if (!confirm('Delete this reel?')) return;
     await createClient().from('reels').delete().eq('id', id);
     load();
+    triggerRevalidation();
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 text-[#C9A86C] animate-spin" /></div>;
