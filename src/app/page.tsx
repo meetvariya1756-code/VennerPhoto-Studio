@@ -8,6 +8,7 @@ import ProcessSection from '@/components/home/ProcessSection';
 import ContactCTA from '@/components/home/ContactCTA';
 import TestimonialSlider from '@/components/home/TestimonialSlider';
 import BeforeAfterSection from '@/components/home/BeforeAfterSection';
+import WeddingHighlightsSection from '@/components/home/WeddingHighlightsSection';
 import {
   getHeroes,
   getServices,
@@ -15,18 +16,20 @@ import {
   getReels,
   getTestimonials,
   getBeforeAfterComparisons,
+  getWeddingHighlights,
 } from '@/lib/db';
 
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const [heroes, rawServices, photos, reels, testimonials, comparisons] = await Promise.all([
+  const [heroes, rawServices, photos, reels, testimonials, comparisons, highlights] = await Promise.all([
     getHeroes(),
     getServices(),
     getFeaturedPortfolioPhotos(),
     getReels(),
     getTestimonials(),
     getBeforeAfterComparisons(),
+    getWeddingHighlights(),
   ]);
 
   const services = rawServices.map((srv: any) => ({
@@ -56,6 +59,7 @@ export default async function HomePage() {
     <div className="w-full flex flex-col">
       <HeroSection heroes={heroes as any} />
       <ServicesGrid services={services as any} />
+      <WeddingHighlightsSection highlights={highlights} />
       <BeforeAfterSection comparisons={comparisons} />
       <AutoScrollingReels reels={mappedReels as any} />
       <PortfolioPreview photos={mappedPhotos as any} />

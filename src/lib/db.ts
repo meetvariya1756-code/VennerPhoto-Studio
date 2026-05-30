@@ -129,6 +129,17 @@ export interface BeforeAfterComparison {
   display_order: number;
 }
 
+export interface WeddingHighlight {
+  id: string;
+  title: string;
+  video_url: string;
+  thumbnail_url?: string;
+  seo_title?: string;
+  seo_description?: string;
+  is_active: boolean;
+  display_order: number;
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // MOCK DATA FALLBACKS
 // ─────────────────────────────────────────────────────────────────────
@@ -233,6 +244,29 @@ const MOCK_COMPARISONS: BeforeAfterComparison[] = [
     description: 'Balancing skin smooth tones, highlights, shadow depths, and modern fashion background color-grading.',
     before_image_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80&sat=-40&contrast=10',
     after_image_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80',
+    is_active: true,
+    display_order: 2
+  }
+];
+
+const MOCK_HIGHLIGHTS: WeddingHighlight[] = [
+  {
+    id: 'mh1',
+    title: 'The Royal Heritage Vows',
+    video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
+    thumbnail_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
+    seo_title: 'Royal Heritage Wedding Highlights',
+    seo_description: 'Widescreen cinematic wedding highlight film captured at the heritage palace.',
+    is_active: true,
+    display_order: 1
+  },
+  {
+    id: 'mh2',
+    title: 'Golden Hour Lakeside Union',
+    video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
+    thumbnail_url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+    seo_title: 'Lakeside Wedding Highlights Film',
+    seo_description: 'Sunset lake vows cinematic highlights video with warm grade palette.',
     is_active: true,
     display_order: 2
   }
@@ -353,4 +387,11 @@ export async function getBeforeAfterComparisons(): Promise<BeforeAfterComparison
     const sb = await createServerSupabaseClient();
     return sb.from('before_after_comparisons').select('*').eq('is_active', true).order('display_order');
   }, MOCK_COMPARISONS);
+}
+
+export async function getWeddingHighlights(): Promise<WeddingHighlight[]> {
+  return safeQuery(async () => {
+    const sb = await createServerSupabaseClient();
+    return sb.from('wedding_highlights').select('*').eq('is_active', true).order('display_order');
+  }, MOCK_HIGHLIGHTS);
 }

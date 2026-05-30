@@ -218,3 +218,46 @@ INSERT INTO services (title, slug, short_description, display_order, is_active) 
   ('Birthday Photography', 'birthday-photography', 'Fun and vibrant photos to celebrate your birthday milestones.', 9, true),
   ('Maternity Photography', 'maternity-photography', 'Elegant and emotive portraits celebrating the beauty of pregnancy.', 10, true)
 ON CONFLICT (slug) DO NOTHING;
+
+-- ============================================================
+-- TABLE: before_after_comparisons
+-- ============================================================
+CREATE TABLE IF NOT EXISTS before_after_comparisons (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  before_image_url TEXT NOT NULL,
+  after_image_url TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- TABLE: wedding_highlights
+-- ============================================================
+CREATE TABLE IF NOT EXISTS wedding_highlights (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  title TEXT NOT NULL,
+  video_url TEXT NOT NULL,
+  thumbnail_url TEXT DEFAULT '',
+  seo_title TEXT DEFAULT '',
+  seo_description TEXT DEFAULT '',
+  is_active BOOLEAN DEFAULT TRUE,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE before_after_comparisons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wedding_highlights ENABLE ROW LEVEL SECURITY;
+
+-- Policies: Public Read
+CREATE POLICY "Public read before_after_comparisons" ON before_after_comparisons FOR SELECT USING (true);
+CREATE POLICY "Public read wedding_highlights" ON wedding_highlights FOR SELECT USING (true);
+
+-- Policies: Authenticated Admin Write
+CREATE POLICY "Auth write before_after_comparisons" ON before_after_comparisons FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Auth write wedding_highlights" ON wedding_highlights FOR ALL USING (auth.role() = 'authenticated');

@@ -110,3 +110,14 @@ export interface BeforeAfterComparison {
   isActive: boolean;
   order: number;
 }
+
+export interface WeddingHighlight {
+  _id: string;
+  title: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  isActive: boolean;
+  order: number;
+}
