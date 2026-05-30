@@ -99,6 +99,7 @@ export interface SiteSettings {
   facebookUrl?: string;
   youtubeUrl?: string;
   googleMapEmbedUrl?: string;
+  privacyPolicy?: string;
 }
 
 export interface BeforeAfterComparison {

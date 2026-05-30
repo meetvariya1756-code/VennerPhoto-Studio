@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Save, Loader2, CheckCircle } from 'lucide-react';
+import { triggerRevalidation } from '@/lib/revalidate';
 
 interface Settings {
   id?: string;
@@ -18,6 +19,7 @@ interface Settings {
   youtube_url: string;
   whatsapp_number: string;
   google_map_embed_url: string;
+  privacy_policy: string;
 }
 
 const DEFAULTS: Settings = {
@@ -33,20 +35,21 @@ const DEFAULTS: Settings = {
   youtube_url: 'https://m.youtube.com/@vennerphoto',
   whatsapp_number: '919825983437',
   google_map_embed_url: '',
+  privacy_policy: '',
 };
 
 function Field({ label, name, value, onChange, type = 'text', placeholder = '' }: any) {
   return (
     <div>
       <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">{label}</label>
-      {name === 'google_map_embed_url' ? (
+      {name === 'google_map_embed_url' || name === 'privacy_policy' ? (
         <textarea
           name={name}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          rows={3}
-          className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors resize-none shadow-sm"
+          rows={name === 'privacy_policy' ? 12 : 3}
+          className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] placeholder-neutral-400 focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm"
         />
       ) : (
         <input
@@ -92,7 +95,7 @@ export default function SettingsPage() {
       ? await sb.from('site_settings').update({ ...settings, updated_at: new Date().toISOString() }).eq('id', settings.id)
       : await sb.from('site_settings').insert(settings);
     if (err) setError(err.message);
-    else { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+    else { setSaved(true); triggerRevalidation(); setTimeout(() => setSaved(false), 3000); }
     setSaving(false);
   };
 
@@ -143,6 +146,18 @@ export default function SettingsPage() {
         <div className="bg-white border border-neutral-200/60 rounded-xl p-6 space-y-4 shadow-sm">
           <h2 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider border-b border-neutral-200/60 pb-3">Google Maps</h2>
           <Field label="Google Maps Embed URL (from Google Maps → Share → Embed)" name="google_map_embed_url" value={settings.google_map_embed_url} onChange={handleChange} />
+        </div>
+
+        {/* Privacy Policy */}
+        <div className="bg-white border border-neutral-200/60 rounded-xl p-6 space-y-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider border-b border-neutral-200/60 pb-3">Privacy Policy & Terms</h2>
+          <Field 
+            label="Privacy Policy content (Supports raw text layout)" 
+            name="privacy_policy" 
+            value={settings.privacy_policy || ''} 
+            onChange={handleChange} 
+            placeholder="Write details of your studio terms, email, contact phone, and address here..." 
+          />
         </div>
 
         {error && <p className="text-red-700 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3 shadow-sm">{error}</p>}

@@ -192,6 +192,11 @@ export default function Footer() {
       {/* Footer Bottom Deck */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 border-t border-neutral-800 pt-8 flex flex-col md:flex-row items-center justify-between text-neutral-500 text-xs font-light">
         <p suppressHydrationWarning>© {new Date().getFullYear()} Venner Photo Studio. All rights reserved.</p>
+        <div className="flex items-center gap-4 mt-2 md:mt-0">
+          <Link href="/policy" className="text-neutral-500 hover:text-[#C9A86C] transition-colors border-b border-transparent hover:border-[#C9A86C]/40 pb-0.5">
+            Privacy Policy
+          </Link>
+        </div>
         <p className="mt-2 md:mt-0 tracking-wider">
           DESIGNED WITH PASSION & ELEGANCE
         </p>

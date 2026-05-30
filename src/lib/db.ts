@@ -31,6 +31,7 @@ export interface SiteSettings {
   youtube_url: string;
   whatsapp_number: string;
   google_map_embed_url: string;
+  privacy_policy: string;
 }
 
 export interface Hero {
@@ -158,6 +159,7 @@ const MOCK_SETTINGS: SiteSettings = {
   youtube_url: 'https://m.youtube.com/@vennerphoto',
   whatsapp_number: '919825983437',
   google_map_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1779775316406!5m2!1sen!2sin',
+  privacy_policy: '### PRIVACY POLICY & TERMS\n\nWelcome to Venner Photo Studio. We value your privacy and are committed to protecting your personal data. This policy outlines how we collect, use, and safeguard your booking information.\n\n#### 1. Information Collection\nWe collect details such as your name, email address, phone number, and event details when you submit an inquiry form or book a session with us. This information is exclusively used to coordinate photography sessions, process billing, and communicate with you.\n\n#### 2. Media Ownership & Usage\nAll photographic and motion materials captured by Venner Photo Studio remain the artistic property of the studio. Portfolios may be displayed on our official showcase channels for marketing and creative showcasing, unless mutually agreed otherwise in writing prior to the session.\n\n#### 3. Data Protection\nWe implement rigorous secure encryption and authentication protocols to safeguard your personal records and media metadata against unauthorized access or breaches.\n\n#### 4. Contact Us\nIf you have any questions, concerns, or requests regarding this policy, please reach out to us directly:\n\n* **Email:** vennerphoto@gmail.com\n* **Phone:** +91 98259 83437\n* **Studio Address:** B-27 Rangdarshan So-1, Dhanmora, Katargam, Surat',
 };
 
 const MOCK_HEROES: Hero[] = [
