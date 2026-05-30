@@ -150,8 +150,8 @@ export default function HeroesAdminPage() {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <MediaUpload type="image" folder="heroes" currentUrl={editing.background_image_url} onUpload={url => setEditing({ ...editing, background_image_url: url })} label="Desktop Background Image *" />
-                <MediaUpload type="image" folder="heroes" currentUrl={editing.mobile_background_image_url || ''} onUpload={url => setEditing({ ...editing, mobile_background_image_url: url })} label="Mobile Background Image (Optional)" />
+                <MediaUpload type="image" folder="heroes" currentUrl={editing.background_image_url} onUpload={url => setEditing({ ...editing, background_image_url: url })} label="Desktop Background Image * (Recommended: 1920x1080px)" />
+                <MediaUpload type="image" folder="heroes" currentUrl={editing.mobile_background_image_url || ''} onUpload={url => setEditing({ ...editing, mobile_background_image_url: url })} label="Mobile Background Image (Optional) (Recommended: 1080x1920px)" />
               </div>
               <div className="flex items-center gap-3">
                 <input type="checkbox" id="active" checked={editing.is_active} onChange={e => setEditing({ ...editing, is_active: e.target.checked })} className="w-4 h-4 accent-[#C9A86C]" />
