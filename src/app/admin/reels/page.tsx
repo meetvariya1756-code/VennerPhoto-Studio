@@ -15,7 +15,7 @@ interface Reel {
   is_featured: boolean;
 }
 
-const CATEGORIES = [
+const FALLBACK_CATEGORIES = [
   'wedding-photography', 'engagement-photography', 'modeling-photography',
   'product-photography', 'maternity-photography', 'baby-shower-photography', 'corporate-event-photography',
   'birthday-photography', 'children-photography', 'indoor-studio-photography',
@@ -25,6 +25,7 @@ const EMPTY: Reel = { title: '', video_url: '', thumbnail_url: '', category: 'we
 
 export default function ReelsAdminPage() {
   const [reels, setReels] = useState<Reel[]>([]);
+  const [categories, setCategories] = useState<string[]>(FALLBACK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Reel | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,7 +38,22 @@ export default function ReelsAdminPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadCategories = useCallback(async () => {
+    try {
+      const sb = createClient();
+      const { data } = await sb.from('services').select('slug').order('display_order');
+      if (data && data.length > 0) {
+        setCategories(data.map(s => s.slug));
+      }
+    } catch (err) {
+      console.error('Failed to load services for reels admin:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+    loadCategories();
+  }, [load, loadCategories]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +143,7 @@ export default function ReelsAdminPage() {
               <div>
                 <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Category</label>
                 <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm">
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>)}
+                  {categories.map(c => <option key={c} value={c}>{c.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>)}
                 </select>
               </div>
               <MediaUpload type="video" folder="reels" currentUrl={editing.video_url} onUpload={url => setEditing({ ...editing, video_url: url })} label="Video File *" />

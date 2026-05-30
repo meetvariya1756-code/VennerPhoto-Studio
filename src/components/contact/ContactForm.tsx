@@ -22,7 +22,7 @@ const contactSchema = zod.object({
 
 type ContactFormData = zod.infer<typeof contactSchema>;
 
-const SERVICES_OPTIONS = [
+const FALLBACK_SERVICES_OPTIONS = [
   { value: 'wedding-photography', label: 'Wedding Photography' },
   { value: 'engagement-photography', label: 'Engagement Photography' },
   { value: 'baby-shower-photography', label: 'Baby Shower Photography' },
@@ -39,6 +39,41 @@ const SERVICES_OPTIONS = [
 export default function ContactForm() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [serviceOptions, setServiceOptions] = useState(FALLBACK_SERVICES_OPTIONS);
+
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const isSupabaseConfigured =
+          !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
+          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
+
+        if (!isSupabaseConfigured) return;
+
+        const { createClient } = await import('@/lib/supabase');
+        const sb = createClient();
+        const { data } = await sb
+          .from('services')
+          .select('title, slug')
+          .eq('is_active', true)
+          .order('display_order');
+
+        if (data && data.length > 0) {
+          const dynamicOptions = data.map((s: any) => ({
+            value: s.slug,
+            label: s.title,
+          }));
+          dynamicOptions.push({ value: 'general-inquiry', label: 'General Inquiry' });
+          setServiceOptions(dynamicOptions);
+        }
+      } catch (err) {
+        console.error('Failed to load services for contact form:', err);
+      }
+    }
+    loadServices();
+  }, []);
 
   const prefilledService = searchParams.get('service') || '';
   const prefilledPackage = searchParams.get('package') || '';
@@ -165,7 +200,7 @@ export default function ContactForm() {
             className="w-full border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:border-[#C9A86C] rounded-none bg-white transition-colors cursor-pointer"
           >
             <option value="">Select Offerings...</option>
-            {SERVICES_OPTIONS.map((opt) => (
+            {serviceOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>

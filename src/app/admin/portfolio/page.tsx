@@ -14,7 +14,7 @@ interface Photo {
   is_featured: boolean;
 }
 
-const CATEGORIES = [
+const FALLBACK_CATEGORIES = [
   { value: 'wedding-photography', label: 'Wedding' },
   { value: 'engagement-photography', label: 'Engagement' },
   { value: 'baby-shower-photography', label: 'Baby Shower' },
@@ -31,6 +31,7 @@ const EMPTY: Photo = { title: '', image_url: '', category: 'wedding-photography'
 
 export default function PortfolioAdminPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [categories, setCategories] = useState<{ value: string; label: string }[]>(FALLBACK_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Photo | null>(null);
   const [saving, setSaving] = useState(false);
@@ -47,7 +48,25 @@ export default function PortfolioAdminPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadCategories = useCallback(async () => {
+    try {
+      const sb = createClient();
+      const { data } = await sb.from('services').select('title, slug').order('display_order');
+      if (data && data.length > 0) {
+        setCategories(data.map(s => ({
+          value: s.slug,
+          label: s.title.replace(/\s+photography$/i, '')
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load services for portfolio admin:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+    loadCategories();
+  }, [load, loadCategories]);
 
   // Bulk upload multiple images at once
   const handleBulkUpload = async (files: FileList) => {
@@ -123,7 +142,7 @@ export default function PortfolioAdminPage() {
       {/* Category Filter */}
       <div className="flex gap-2 flex-wrap mb-6">
         <button onClick={() => setFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border ${filter === 'all' ? 'bg-[#1A1A1A] text-[#C9A86C] border-[#1A1A1A]' : 'bg-white text-neutral-500 border-neutral-200 hover:bg-neutral-50'}`}>All</button>
-        {CATEGORIES.map(c => (
+        {categories.map(c => (
           <button key={c.value} onClick={() => setFilter(c.value)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border ${filter === c.value ? 'bg-[#1A1A1A] text-[#C9A86C] border-[#1A1A1A]' : 'bg-white text-neutral-500 border-neutral-200 hover:bg-neutral-50'}`}>{c.label}</button>
         ))}
       </div>
@@ -177,7 +196,7 @@ export default function PortfolioAdminPage() {
               <div>
                 <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Category</label>
                 <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm">
-                  {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
               <div>

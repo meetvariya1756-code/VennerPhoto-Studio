@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import { createClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
-// Hardcoded portfolio category nodes
-export const CATEGORIES = [
+// Fallback portfolio category nodes when Supabase is not configured yet
+const FALLBACK_CATEGORIES = [
   { id: 'all', title: 'All' },
   { id: 'wedding-photography', title: 'Wedding' },
   { id: 'engagement-photography', title: 'Engagement' },
@@ -29,6 +30,49 @@ export default function CategoryFilter({
   onCategoryChange,
   darkBg = false,
 }: CategoryFilterProps) {
+  const [categories, setCategories] = React.useState(FALLBACK_CATEGORIES);
+
+  React.useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const isSupabaseConfigured =
+          !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
+          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
+
+        if (!isSupabaseConfigured) return;
+
+        const sb = createClient();
+        const { data, error } = await sb
+          .from('services')
+          .select('title, slug')
+          .eq('is_active', true)
+          .order('display_order');
+
+        if (error) {
+          console.error('Error fetching categories for filter:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const dynamicCats = [
+            { id: 'all', title: 'All' },
+            ...data.map((s: any) => ({
+              id: s.slug,
+              title: s.title.replace(/\s+photography$/i, ''),
+            })),
+          ];
+          setCategories(dynamicCats);
+        }
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
   return (
     <div className="w-full flex items-center justify-center overflow-x-auto pb-4 mb-12 scrollbar-hide">
       <div
@@ -39,7 +83,7 @@ export default function CategoryFilter({
             : 'bg-[#1A1A1A]/5 border-neutral-200/50'
         )}
       >
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive = activeCategory === cat.id;
           return (
             <button
