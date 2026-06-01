@@ -44,15 +44,15 @@ export default function AutoScrollingReels({ reels }: AutoScrollingReelsProps) {
               onClick={() => setActiveVideoUrl(reel.videoUrl)}
               className="w-[200px] sm:w-[240px] aspect-[9/16] relative flex-shrink-0 cursor-pointer overflow-hidden rounded-none border border-neutral-800 hover:border-[#C9A86C]/50 transition-all duration-500 hover:scale-[1.03] shadow-2xl group"
             >
-              {/* Highly optimized static card thumbnail cover to prevent multiple video element bottlenecks */}
-              <ImageWithFallback
-                src={reel.thumbnailImage}
-                fallbackType="video-thumb"
-                fallbackIndex={idx}
-                alt={reel.title}
-                fill
-                sizes="(max-width: 640px) 200px, 240px"
-                className="group-hover:scale-105 transition-transform duration-700 ease-out object-cover"
+              {/* Live video */}
+              <video
+                src={reel.videoUrl}
+                preload="metadata"
+                muted
+                playsInline
+                loop
+                autoPlay
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               />
 
               {/* Muted video overlay on hover */}

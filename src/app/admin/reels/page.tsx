@@ -90,40 +90,44 @@ export default function ReelsAdminPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {reels.length === 0 && (
-          <div className="col-span-3 text-center py-16 text-neutral-400 bg-white border border-neutral-200 rounded-xl shadow-sm">No reels yet. Click "Add Reel" to upload your first video.</div>
+          <div className="col-span-full text-center py-16 text-neutral-400 bg-white border border-neutral-200 rounded-xl shadow-sm">No reels yet. Click "Add Reel" to upload your first video.</div>
         )}
         {reels.map((reel, index) => (
-          <div key={reel.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden group shadow-sm">
-            <div className="relative aspect-video bg-neutral-100 flex items-center justify-center border-b border-neutral-200 overflow-hidden">
-              {reel.thumbnail_url ? (
-                <img
-                  src={reel.thumbnail_url}
-                  alt={reel.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <video
-                  src={reel.video_url}
-                  preload="metadata"
-                  muted
-                  playsInline
-                  loop
-                  autoPlay
-                  className="w-full h-full object-cover"
-                />
-              )}
-              {reel.is_featured && (
-                <span className="absolute top-2 left-2 bg-[#C9A86C] text-[#1A1A1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Featured</span>
-              )}
+          <div key={reel.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden group shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="relative aspect-[9/16] bg-neutral-100 flex items-center justify-center border-b border-neutral-200 overflow-hidden">
+                {reel.thumbnail_url ? (
+                  <img
+                    src={reel.thumbnail_url}
+                    alt={reel.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <video
+                    src={reel.video_url}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    loop
+                    autoPlay
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                {reel.is_featured && (
+                  <span className="absolute top-2 left-2 bg-[#C9A86C] text-[#1A1A1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Featured</span>
+                )}
+              </div>
+              <div className="p-4 pb-0">
+                <p className="text-[#1A1A1A] text-sm font-medium truncate">{reel.title}</p>
+                <p className="text-neutral-400 text-[10px] uppercase tracking-wider mt-0.5">{reel.category.replace(/-/g, ' ')}</p>
+              </div>
             </div>
-            <div className="p-4">
-              <p className="text-[#1A1A1A] text-sm font-medium truncate">{reel.title}</p>
-              <p className="text-neutral-400 text-[10px] uppercase tracking-wider mt-0.5">{reel.category.replace(/-/g, ' ')}</p>
-              <div className="flex gap-2 mt-3">
-                <button onClick={() => setEditing(reel)} className="flex-1 text-xs text-[#C9A86C] border border-[#C9A86C]/40 py-1.5 rounded-lg hover:bg-neutral-900 hover:text-white transition-all text-center">Edit</button>
-                <button onClick={() => handleDelete(reel.id!)} className="text-red-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-50 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+            <div className="p-4 pt-3">
+              <div className="flex gap-2">
+                <button onClick={() => setEditing(reel)} className="flex-1 text-xs text-[#C9A86C] border border-[#C9A86C]/40 py-1.5 rounded-lg hover:bg-neutral-900 hover:text-white transition-all text-center font-medium">Edit</button>
+                <button onClick={() => handleDelete(reel.id!)} className="text-red-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-50 transition-all flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
             </div>
           </div>
