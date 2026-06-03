@@ -29,7 +29,7 @@ export default function StudioInfo() {
     <div className="flex flex-col gap-10 text-left font-sans">
       <div>
         <span className="text-[#C9A86C] text-xs font-semibold tracking-widest uppercase block mb-1">
-          Venner Studio HQ
+          Venner Photo Studio
         </span>
         <h3 className="font-serif text-3xl font-light tracking-wide text-[#1A1A1A] mb-4">
           Studio Location
@@ -86,15 +86,15 @@ export default function StudioInfo() {
         </div>
       </div>
 
-      {/* Map Embed Frame */}
       <div className="w-full aspect-[4/3] bg-neutral-100 border border-neutral-200 overflow-hidden shadow-md">
         <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1779775316406!5m2!1sen!2sin"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1780470051501!5m2!1sen!2sin"
           width="100%"
           height="100%"
           style={{ border: 0 }}
           allowFullScreen
           loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
           title="Venner Photo Studio Location Map"
         />
       </div>
