@@ -17,7 +17,7 @@ const contactSchema = zod.object({
   service: zod.string().min(1, 'Please select a service'),
   date: zod.string().min(1, 'Please choose a preferred date'),
   location: zod.string().optional(),
-  message: zod.string().min(10, 'Message must be at least 10 characters'),
+  message: zod.string().optional(),
 });
 
 type ContactFormData = zod.infer<typeof contactSchema>;
@@ -241,7 +241,7 @@ export default function ContactForm() {
       {/* Narrative Message */}
       <div className="flex flex-col gap-2">
         <label className="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase">
-          Detailed Message *
+          Detailed Message (Optional)
         </label>
         <textarea
           rows={5}

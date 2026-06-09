@@ -12,7 +12,7 @@ const contactServerSchema = zod.object({
   service: zod.string().min(1),
   date: zod.string().min(1),
   location: zod.string().optional(),
-  message: zod.string().min(10),
+  message: zod.string().optional(),
 });
 
 function escapeHtml(str: string): string {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const safeService = escapeHtml(service);
     const safeDate = escapeHtml(date);
     const safeLocation = location ? escapeHtml(location) : '';
-    const safeMessage = escapeHtml(message);
+    const safeMessage = message ? escapeHtml(message) : '';
 
     // 1.5. Save inquiry to Supabase database
     try {
