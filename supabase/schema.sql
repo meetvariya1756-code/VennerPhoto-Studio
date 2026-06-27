@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS service_gallery (
   image_url TEXT NOT NULL,
   alt_text TEXT DEFAULT '',
   display_order INTEGER DEFAULT 0,
+  sub_category TEXT DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

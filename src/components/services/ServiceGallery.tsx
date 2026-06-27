@@ -173,23 +173,47 @@ const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1520316587275-5e4f06f355e3?auto=format&fit=crop&w=1200&q=80',
 ];
 
+const MOCK_WEDDING_GALLERY = [
+  { url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80', subCategory: 'portrait' },
+  { url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80', subCategory: 'candid' },
+  { url: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?auto=format&fit=crop&w=1200&q=80', subCategory: 'portrait' },
+  { url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=80', subCategory: 'candid' },
+  { url: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&w=1200&q=80', subCategory: 'portrait' },
+  { url: 'https://images.unsplash.com/photo-1507914372368-b2b085b925a1?auto=format&fit=crop&w=1200&q=80', subCategory: 'candid' },
+  { url: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80', subCategory: 'candid' },
+  { url: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1200&q=80', subCategory: 'portrait' },
+  { url: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1200&q=80', subCategory: 'candid' },
+  { url: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80', subCategory: 'portrait' },
+  { url: 'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&w=1200&q=80', subCategory: 'candid' },
+  { url: 'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=80', subCategory: 'portrait' },
+];
+
 export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: ServiceGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'candid' | 'portrait'>('all');
 
   // Determine which image pool to use
   const slug = serviceSlug || serviceTitle.toLowerCase().replace(/\s+/g, '-');
   
   // Safe extraction of dynamic gallery images uploaded via Supabase Admin
-  const customImages = gallery && gallery.length > 0 
+  const defaultPool = SERVICE_IMAGE_POOLS[slug] || FALLBACK_IMAGES;
+  const galleryItems = gallery && gallery.length > 0 
     ? gallery.map(item => {
-        if (typeof item === 'string') return item;
-        return (item as any).image_url || (item as any).url || (item as any).asset?._ref || '';
-      }).filter(Boolean)
-    : [];
+        if (typeof item === 'string') return { url: item, subCategory: null };
+        const url = (item as any).image_url || (item as any).url || (item as any).asset?._ref || '';
+        const subCategory = (item as any).sub_category || null;
+        return { url, subCategory };
+      }).filter(x => !!x.url)
+    : (slug === 'wedding-photography' 
+        ? MOCK_WEDDING_GALLERY 
+        : defaultPool.map(url => ({ url, subCategory: null })));
 
-  const imageUrls = customImages.length > 0 
-    ? customImages 
-    : (SERVICE_IMAGE_POOLS[slug] || FALLBACK_IMAGES);
+  const filteredItems = galleryItems.filter(item => {
+    if (activeTab === 'all') return true;
+    return item.subCategory === activeTab;
+  });
+
+  const imageUrls = filteredItems.map(item => item.url);
 
   const handleNext = () => {
     if (lightboxIndex === null) return;
@@ -228,6 +252,34 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
       <p className="text-center text-neutral-500 font-sans text-sm mb-10 -mt-4">
         Click any photo to view full screen • {imageUrls.length} photos
       </p>
+
+      {slug === 'wedding-photography' && (
+        <div className="flex justify-center items-center gap-6 mb-10 -mt-4">
+          {(['all', 'candid', 'portrait'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                setLightboxIndex(null);
+              }}
+              className={`relative font-sans text-xs tracking-widest uppercase pb-2 transition-colors duration-300 ${
+                activeTab === tab
+                  ? 'text-[#C9A86C] font-semibold'
+                  : 'text-neutral-400 hover:text-neutral-600'
+              }`}
+            >
+              {tab}
+              {activeTab === tab && (
+                <motion.div
+                  layoutId="activeGalleryTabUnderline"
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#C9A86C]"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Masonry-style grid - varied column spans for visual richness */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

@@ -61,6 +61,7 @@ export interface ServiceGalleryImage {
   image_url: string;
   alt_text: string;
   display_order: number;
+  sub_category?: string | null;
 }
 
 export interface Service {

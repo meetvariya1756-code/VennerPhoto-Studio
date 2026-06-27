@@ -6,7 +6,7 @@ import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, ChevronRight, Images, Tag, ArrowLeft } from 'lucide-react';
 
 interface ServicePackage { id?: string; service_id?: string; package_name: string; price: string; features: string[]; display_order: number; }
-interface GalleryImage { id?: string; service_id?: string; image_url: string; alt_text: string; display_order: number; }
+interface GalleryImage { id?: string; service_id?: string; image_url: string; alt_text: string; display_order: number; sub_category?: string | null; }
 interface Service { id?: string; title: string; slug: string; short_description: string; full_description: string; hero_image_url: string; thumbnail_image_url?: string; is_active: boolean; display_order: number; seo_title: string; seo_description: string; }
 
 const EMPTY_SERVICE: Service = { title: '', slug: '', short_description: '', full_description: '', hero_image_url: '', thumbnail_image_url: '', is_active: true, display_order: 0, seo_title: '', seo_description: '' };
@@ -96,6 +96,12 @@ export default function ServicesAdminPage() {
   const removeGalleryImage = async (id: string) => {
     await createClient().from('service_gallery').delete().eq('id', id);
     setGallery(g => g.filter(img => img.id !== id));
+  };
+
+  const updateGalleryImageSubCategory = async (id: string, subCategory: string | null) => {
+    const sb = createClient();
+    await sb.from('service_gallery').update({ sub_category: subCategory }).eq('id', id);
+    setGallery(g => g.map(img => img.id === id ? { ...img, sub_category: subCategory } : img));
   };
 
   // Package management
@@ -240,9 +246,46 @@ export default function ServicesAdminPage() {
         {gallery.map((img) => (
           <div key={img.id} className="group relative aspect-square bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200 shadow-sm">
             <img src={img.image_url} alt={img.alt_text} className="w-full h-full object-cover" />
-            <button onClick={() => removeGalleryImage(img.id!)} className="absolute top-2 right-2 w-7 h-7 bg-red-600/90 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => removeGalleryImage(img.id!)} className="absolute top-2 right-2 w-7 h-7 bg-red-600/90 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
               <X className="w-3.5 h-3.5" />
             </button>
+            {selected?.slug === 'wedding-photography' && (
+              <div className="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-sm p-1.5 flex justify-center gap-1 z-10">
+                <button
+                  type="button"
+                  onClick={() => updateGalleryImageSubCategory(img.id!, null)}
+                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${
+                    !img.sub_category
+                      ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  General
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateGalleryImageSubCategory(img.id!, 'candid')}
+                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${
+                    img.sub_category === 'candid'
+                      ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Candid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateGalleryImageSubCategory(img.id!, 'portrait')}
+                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${
+                    img.sub_category === 'portrait'
+                      ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Portrait
+                </button>
+              </div>
+            )}
           </div>
         ))}
         {gallery.length === 0 && <div className="col-span-4 text-center py-12 text-neutral-400 bg-white border border-neutral-200 rounded-xl shadow-sm">No gallery photos yet. Upload above.</div>}
