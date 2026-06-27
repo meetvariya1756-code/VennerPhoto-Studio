@@ -23,6 +23,7 @@ export default function ServicesAdminPage() {
   const [packages, setPackages] = useState<ServicePackage[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [uploadCategory, setUploadCategory] = useState<'general' | 'candid' | 'portrait'>('general');
 
   const loadServices = useCallback(async () => {
     const { data } = await createClient().from('services').select('*').order('display_order');
@@ -76,18 +77,21 @@ export default function ServicesAdminPage() {
   const addGalleryImage = async (imageUrl: string) => {
     if (!selected?.id || !imageUrl) return;
     const sb = createClient();
-    const { data } = await sb.from('service_gallery').insert({ service_id: selected.id, image_url: imageUrl, alt_text: '', display_order: gallery.length + 1 }).select().single();
+    const subCat = uploadCategory === 'general' ? null : uploadCategory;
+    const { data } = await sb.from('service_gallery').insert({ service_id: selected.id, image_url: imageUrl, alt_text: '', display_order: gallery.length + 1, sub_category: subCat }).select().single();
     if (data) setGallery(g => [...g, data]);
   };
 
   const addGalleryImages = async (imageUrls: string[]) => {
     if (!selected?.id || !imageUrls || imageUrls.length === 0) return;
     const sb = createClient();
+    const subCat = uploadCategory === 'general' ? null : uploadCategory;
     const rows = imageUrls.map((url, idx) => ({
       service_id: selected?.id,
       image_url: url,
       alt_text: '',
-      display_order: gallery.length + idx + 1
+      display_order: gallery.length + idx + 1,
+      sub_category: subCat
     }));
     const { data } = await sb.from('service_gallery').insert(rows).select();
     if (data) setGallery(g => [...g, ...data]);
@@ -240,6 +244,27 @@ export default function ServicesAdminPage() {
         </div>
       </div>
       <div className="bg-white border border-neutral-200/60 rounded-xl p-6 mb-6 shadow-sm">
+        {selected?.slug === 'wedding-photography' && (
+          <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-neutral-100">
+            <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+              Upload Target Category:
+            </span>
+            {(['general', 'candid', 'portrait'] as const).map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setUploadCategory(cat)}
+                className={`text-[10px] px-3.5 py-1.5 rounded border font-sans font-semibold uppercase tracking-wider transition-all duration-200 ${
+                  uploadCategory === cat
+                    ? 'bg-[#C9A86C] text-[#1A1A1A] border-[#C9A86C] shadow-sm'
+                    : 'bg-white text-neutral-400 border-neutral-200 hover:border-neutral-300 hover:text-neutral-600'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
         <MediaUpload type="image" folder={`services/${selected?.slug}`} onUpload={url => addGalleryImage(url)} onUploadMultiple={addGalleryImages} multiple={true} label="Add Gallery Photo" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
