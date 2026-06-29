@@ -191,6 +191,7 @@ const MOCK_WEDDING_GALLERY = [
 export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: ServiceGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'candid' | 'portrait'>('all');
+  const thumbnailRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
   // Determine which image pool to use
   const slug = serviceSlug || serviceTitle.toLowerCase().replace(/\s+/g, '-');
@@ -239,6 +240,17 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
       window.removeEventListener('keydown', handler);
       document.body.style.overflow = '';
     };
+  }, [lightboxIndex]);
+
+  // Scroll active thumbnail into view
+  React.useEffect(() => {
+    if (lightboxIndex !== null && thumbnailRefs.current[lightboxIndex]) {
+      thumbnailRefs.current[lightboxIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
   }, [lightboxIndex]);
 
   return (
@@ -329,76 +341,84 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-black/97 backdrop-blur-md flex items-center justify-center p-4 md:p-8 select-none"
+            className="fixed inset-0 z-[100] bg-black/97 backdrop-blur-md flex flex-col justify-between select-none"
           >
             {/* Top bar: counter + close */}
-            <div className="absolute top-0 inset-x-0 flex items-center justify-between z-50 text-white px-6 py-4 bg-gradient-to-b from-black/60 to-transparent">
+            <div className="w-full flex items-center justify-between z-50 text-white px-6 py-4 bg-gradient-to-b from-black/60 to-transparent">
               <span className="font-sans text-xs tracking-widest uppercase text-neutral-300">
                 {serviceTitle} &nbsp;·&nbsp; {lightboxIndex + 1} / {imageUrls.length}
               </span>
               <button
                 onClick={() => setLightboxIndex(null)}
-                className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full border border-white/20 transition-all focus:outline-none"
+                className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full border border-white/20 transition-all focus:outline-none cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Left Arrow */}
-            <button
-              onClick={handlePrev}
-              className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/20 hover:scale-105 active:scale-95 transition-all duration-200 z-50 focus:outline-none"
-              aria-label="Previous"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
+            {/* Main Content Area (Image + Navigation Arrows) */}
+            <div className="relative flex-1 w-full flex items-center justify-center px-4 md:px-16">
+              {/* Left Arrow */}
+              <button
+                onClick={handlePrev}
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center border border-white/10 hover:scale-105 active:scale-95 transition-all duration-200 z-50 focus:outline-none cursor-pointer"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
 
-            {/* Right Arrow */}
-            <button
-              onClick={handleNext}
-              className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center border border-white/20 hover:scale-105 active:scale-95 transition-all duration-200 z-50 focus:outline-none"
-              aria-label="Next"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+              {/* Image Container */}
+              <motion.div
+                key={lightboxIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
+                className="w-full max-w-5xl h-full max-h-[65vh] md:max-h-[70vh] flex items-center justify-center relative"
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src={imageUrls[lightboxIndex]}
+                    alt={`${serviceTitle} - Photo ${lightboxIndex + 1}`}
+                    fill
+                    sizes="(max-width: 1200px) 100vw, 1200px"
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </motion.div>
 
-            {/* Image */}
-            <motion.div
-              key={lightboxIndex}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.25 }}
-              className="relative w-full max-w-5xl max-h-[82vh] flex items-center justify-center"
-            >
-              <div className="relative w-full h-full" style={{ minHeight: '60vh' }}>
-                <Image
-                  src={imageUrls[lightboxIndex]}
-                  alt={`${serviceTitle} - Photo ${lightboxIndex + 1}`}
-                  fill
-                  sizes="100vw"
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </motion.div>
+              {/* Right Arrow */}
+              <button
+                onClick={handleNext}
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center border border-white/10 hover:scale-105 active:scale-95 transition-all duration-200 z-50 focus:outline-none cursor-pointer"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
 
             {/* Bottom thumbnail strip */}
-            <div className="absolute bottom-0 inset-x-0 pb-4 pt-6 bg-gradient-to-t from-black/70 to-transparent flex justify-center gap-1.5 px-4 flex-wrap">
-              {imageUrls.map((url, i) => (
-                <button
-                  key={i}
-                  onClick={() => setLightboxIndex(i)}
-                  className={`relative w-10 h-10 overflow-hidden rounded transition-all duration-200 ${
-                    i === lightboxIndex
-                      ? 'ring-2 ring-[#C9A86C] scale-110'
-                      : 'opacity-50 hover:opacity-100'
-                  }`}
-                >
-                  <Image src={url} alt="" fill sizes="40px" className="object-cover" />
-                </button>
-              ))}
+            <div className="w-full pb-6 pt-4 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-full px-8 py-2 justify-start md:justify-center">
+                {imageUrls.map((url, i) => (
+                  <button
+                    key={i}
+                    ref={(el) => {
+                      thumbnailRefs.current[i] = el;
+                    }}
+                    onClick={() => setLightboxIndex(i)}
+                    className={`relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 overflow-hidden rounded transition-all duration-200 cursor-pointer ${
+                      i === lightboxIndex
+                        ? 'ring-2 ring-[#C9A86C] scale-110 z-10 opacity-100'
+                        : 'opacity-40 hover:opacity-80'
+                    }`}
+                  >
+                    <Image src={url} alt="" fill sizes="56px" className="object-cover" />
+                  </button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}

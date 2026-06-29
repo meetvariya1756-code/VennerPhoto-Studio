@@ -254,11 +254,10 @@ export default function ServicesAdminPage() {
                 key={cat}
                 type="button"
                 onClick={() => setUploadCategory(cat)}
-                className={`text-[10px] px-3.5 py-1.5 rounded border font-sans font-semibold uppercase tracking-wider transition-all duration-200 ${
-                  uploadCategory === cat
-                    ? 'bg-[#C9A86C] text-[#1A1A1A] border-[#C9A86C] shadow-sm'
-                    : 'bg-white text-neutral-400 border-neutral-200 hover:border-neutral-300 hover:text-neutral-600'
-                }`}
+                className={`text-[10px] px-3.5 py-1.5 rounded border font-sans font-semibold uppercase tracking-wider transition-all duration-200 ${uploadCategory === cat
+                  ? 'bg-[#C9A86C] text-[#1A1A1A] border-[#C9A86C] shadow-sm'
+                  : 'bg-white text-neutral-400 border-neutral-200 hover:border-neutral-300 hover:text-neutral-600'
+                  }`}
               >
                 {cat}
               </button>
@@ -279,33 +278,30 @@ export default function ServicesAdminPage() {
                 <button
                   type="button"
                   onClick={() => updateGalleryImageSubCategory(img.id!, null)}
-                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${
-                    !img.sub_category
-                      ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
-                      : 'text-neutral-400 hover:text-white'
-                  }`}
+                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${!img.sub_category
+                    ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
+                    : 'text-neutral-400 hover:text-white'
+                    }`}
                 >
                   General
                 </button>
                 <button
                   type="button"
                   onClick={() => updateGalleryImageSubCategory(img.id!, 'candid')}
-                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${
-                    img.sub_category === 'candid'
-                      ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
-                      : 'text-neutral-400 hover:text-white'
-                  }`}
+                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${img.sub_category === 'candid'
+                    ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
+                    : 'text-neutral-400 hover:text-white'
+                    }`}
                 >
                   Candid
                 </button>
                 <button
                   type="button"
                   onClick={() => updateGalleryImageSubCategory(img.id!, 'portrait')}
-                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${
-                    img.sub_category === 'portrait'
-                      ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
-                      : 'text-neutral-400 hover:text-white'
-                  }`}
+                  className={`text-[9px] px-2 py-0.5 rounded font-sans tracking-wide transition-all ${img.sub_category === 'portrait'
+                    ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold'
+                    : 'text-neutral-400 hover:text-white'
+                    }`}
                 >
                   Portrait
                 </button>
