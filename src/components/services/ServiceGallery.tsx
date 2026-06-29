@@ -375,7 +375,7 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.25 }}
-                className="w-full max-w-5xl h-full max-h-[65vh] md:max-h-[70vh] flex items-center justify-center relative"
+                className="w-full max-w-7xl h-full max-h-[75vh] md:max-h-[82vh] flex items-center justify-center relative"
               >
                 <div className="relative w-full h-full">
                   <Image
