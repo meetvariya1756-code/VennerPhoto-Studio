@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, Star } from 'lucide-react';
 
@@ -24,10 +23,15 @@ export default function TestimonialsAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data } = await sb.from('testimonials').select('*').order('created_at', { ascending: false });
-    setItems(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/admin/testimonials?order=created_at.desc');
+      const data = await res.json();
+      setItems(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load testimonials:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -36,23 +40,44 @@ export default function TestimonialsAdminPage() {
     e.preventDefault();
     if (!editing) return;
     setSaving(true); setError('');
-    const sb = createClient();
-    const { error: err } = editing.id
-      ? await sb.from('testimonials').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
-      : await sb.from('testimonials').insert(editing);
-    if (err) setError(err.message);
-    else { setEditing(null); load(); }
-    setSaving(false);
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/testimonials?id=${editing.id}` : '/api/admin/testimonials';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editing),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save review');
+      }
+
+      setEditing(null);
+      load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this testimonial?')) return;
-    await createClient().from('testimonials').delete().eq('id', id);
+    await fetch(`/api/admin/testimonials?id=${id}`, { method: 'DELETE' });
     load();
   };
 
   const toggleActive = async (item: Testimonial) => {
-    await createClient().from('testimonials').update({ is_active: !item.is_active }).eq('id', item.id!);
+    if (!item.id) return;
+    await fetch(`/api/admin/testimonials?id=${item.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: !item.is_active }),
+    });
     load();
   };
 

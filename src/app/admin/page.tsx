@@ -1,37 +1,31 @@
 import React from 'react';
 import Link from 'next/link';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { Camera, Image, Film, Users, MessageSquare, Layers, Settings, ArrowRight, AlertCircle, Mail, Columns, Video } from 'lucide-react';
-
-const isSupabaseConfigured =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url';
+import { queryPg } from '@/lib/postgres';
+import { Camera, Image, Film, Users, MessageSquare, Layers, Settings, ArrowRight, Mail, Columns, Video } from 'lucide-react';
 
 async function getStats() {
-  if (!isSupabaseConfigured) return null;
   try {
-    const sb = await createServerSupabaseClient();
     const [photos, services, reels, team, testimonials, heroes, inquiries, comparisons, highlights] = await Promise.all([
-      sb.from('portfolio_photos').select('id', { count: 'exact', head: true }),
-      sb.from('services').select('id', { count: 'exact', head: true }),
-      sb.from('reels').select('id', { count: 'exact', head: true }),
-      sb.from('team_members').select('id', { count: 'exact', head: true }),
-      sb.from('testimonials').select('id', { count: 'exact', head: true }),
-      sb.from('heroes').select('id', { count: 'exact', head: true }),
-      sb.from('contact_inquiries').select('id', { count: 'exact', head: true }),
-      sb.from('before_after_comparisons').select('id', { count: 'exact', head: true }),
-      sb.from('wedding_highlights').select('id', { count: 'exact', head: true }),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.portfolio_photos'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.services'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.reels'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.team_members'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.testimonials'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.heroes'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.contact_inquiries'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.before_after_comparisons'),
+      queryPg<{ count: string }>('SELECT COUNT(*)::text as count FROM public.wedding_highlights'),
     ]);
     return {
-      photos: photos.count || 0,
-      services: services.count || 0,
-      reels: reels.count || 0,
-      team: team.count || 0,
-      testimonials: testimonials.count || 0,
-      heroes: heroes.count || 0,
-      inquiries: inquiries?.count || 0,
-      comparisons: comparisons?.count || 0,
-      highlights: highlights?.count || 0,
+      photos: parseInt(photos[0]?.count || '0', 10),
+      services: parseInt(services[0]?.count || '0', 10),
+      reels: parseInt(reels[0]?.count || '0', 10),
+      team: parseInt(team[0]?.count || '0', 10),
+      testimonials: parseInt(testimonials[0]?.count || '0', 10),
+      heroes: parseInt(heroes[0]?.count || '0', 10),
+      inquiries: parseInt(inquiries[0]?.count || '0', 10),
+      comparisons: parseInt(comparisons[0]?.count || '0', 10),
+      highlights: parseInt(highlights[0]?.count || '0', 10),
     };
   } catch {
     return null;
@@ -61,25 +55,7 @@ export default async function AdminDashboard() {
         <p className="text-neutral-500 text-sm mt-1">Welcome to Venner Photo Studio admin panel</p>
       </div>
 
-      {/* Supabase not configured warning */}
-      {!isSupabaseConfigured && (
-        <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl p-6 flex gap-4">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-amber-800 font-semibold text-sm mb-1">Supabase not connected yet</p>
-            <p className="text-amber-700/80 text-xs leading-relaxed">
-              The website is currently running on mock data. To enable live editing:
-            </p>
-            <ol className="text-amber-700/80 text-xs mt-2 space-y-1 list-decimal list-inside">
-              <li>Go to <strong className="text-amber-800">supabase.com</strong> → Create a free project</li>
-              <li>Copy your <strong className="text-amber-800">Project URL</strong> and <strong className="text-amber-800">Anon Key</strong></li>
-              <li>Paste them into <code className="bg-amber-100 px-1 rounded">.env.local</code> (replace the placeholder values)</li>
-              <li>Run the SQL schema from <code className="bg-amber-100 px-1 rounded">supabase/schema.sql</code> in Supabase SQL Editor</li>
-              <li>Restart the dev server with <code className="bg-amber-100 px-1 rounded">npm run dev</code></li>
-            </ol>
-          </div>
-        </div>
-      )}
+
 
       {/* Stats Grid */}
       {stats && (

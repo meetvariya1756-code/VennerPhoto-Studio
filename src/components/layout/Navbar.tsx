@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Button from '../ui/Button';
-import { createClient } from '@/lib/supabase';
 
 // Fallback list of services for dropdown when Supabase is not configured
 const FALLBACK_SERVICE_LINKS = [
@@ -29,36 +28,15 @@ export default function Navbar() {
   useEffect(() => {
     async function fetchServices() {
       try {
-        const isSupabaseConfigured =
-          !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
-          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
-
-        if (!isSupabaseConfigured) return;
-
-        const sb = createClient();
-        const { data, error } = await sb
-          .from('services')
-          .select('title, slug')
-          .eq('is_active', true)
-          .order('display_order');
-
-        if (error) {
-          console.error('Error fetching services for navbar:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          setServiceLinks(
-            data.map((s: any) => ({
-              title: s.title,
-              slug: s.slug,
-            }))
-          );
+        const res = await fetch('/api/services');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setServiceLinks(data);
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch services:', err);
+        console.error('Failed to fetch services for navbar:', err);
       }
     }
 

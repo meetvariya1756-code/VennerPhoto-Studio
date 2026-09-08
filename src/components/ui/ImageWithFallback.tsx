@@ -19,47 +19,71 @@ export default function ImageWithFallback({
   alt = 'Venner Photography Asset',
   className,
   objectFit = 'cover',
+  fill,
+  width,
+  height,
   ...props
 }: ImageWithFallbackProps) {
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  React.useEffect(() => {
+    setError(false);
+  }, [src]);
+
+  // Hash helper for stable placeholder selection
+  const getHashIndex = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  };
+
+  const itemHashIndex = typeof src === 'string' && src ? getHashIndex(src) : (fallbackIndex || getHashIndex(alt || 'default'));
+
+  // Instantly resolve dead or placeholder-fallback URLs without trying to connect to dead servers
+  const isDeadUrl = typeof src === 'string' && (
+    !src ||
+    src.includes('enkyolmjklvryvnzsmvt.supabase.co') ||
+    src.includes('your-supabase-url')
+  );
 
   // Resolve source URL
   let resolvedSrc = '';
-
-  if (error || !src) {
-    resolvedSrc = getMockPlaceholder(fallbackType, fallbackIndex);
+  if (error || !src || isDeadUrl) {
+    resolvedSrc = getMockPlaceholder(fallbackType, itemHashIndex);
   } else if (typeof src === 'string') {
     resolvedSrc = src;
   } else if (src && typeof src === 'object') {
-    // Attempt Sanity Image builder
     const sanityUrl = urlForImage(src);
-    if (sanityUrl) {
+    if (sanityUrl && !error) {
       resolvedSrc = sanityUrl.url();
     } else {
-      resolvedSrc = getMockPlaceholder(fallbackType, fallbackIndex);
+      resolvedSrc = getMockPlaceholder(fallbackType, itemHashIndex);
     }
   } else {
-    resolvedSrc = getMockPlaceholder(fallbackType, fallbackIndex);
+    resolvedSrc = getMockPlaceholder(fallbackType, itemHashIndex);
   }
 
+  // Determine sizing: if neither width nor height is provided, default to fill mode
+  const isFillMode = fill !== undefined ? fill : (!width && !height);
+
   return (
-    <div className={cn('relative overflow-hidden w-full h-full bg-neutral-100', className)}>
-      {loading && (
-        <div className="absolute inset-0 z-10 animate-pulse bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200" />
-      )}
+    <div className={cn('relative overflow-hidden w-full h-full', !className?.includes('bg-') && 'bg-neutral-100/50', className)}>
       <Image
         src={resolvedSrc}
         alt={alt}
+        fill={isFillMode}
+        width={!isFillMode ? width : undefined}
+        height={!isFillMode ? height : undefined}
+        unoptimized={resolvedSrc.startsWith('/uploads') || resolvedSrc.startsWith('data:')}
         className={cn(
-          'transition-all duration-700 ease-out',
-          objectFit === 'contain' ? 'object-contain' : 'object-cover',
-          loading ? 'scale-105 blur-sm' : 'scale-100 blur-0'
+          'transition-all duration-300 ease-out',
+          objectFit === 'contain' ? 'object-contain' : 'object-cover'
         )}
-        onLoad={() => setLoading(false)}
         onError={() => {
           setError(true);
-          setLoading(false);
         }}
         {...props}
       />

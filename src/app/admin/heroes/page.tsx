@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Plus, Trash2, Loader2, Save, X } from 'lucide-react';
 
 interface Hero {
@@ -36,10 +36,15 @@ export default function HeroesAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data } = await sb.from('heroes').select('*').order('display_order');
-    setHeroes(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/heroes?order=display_order.asc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setHeroes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load heroes:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -48,19 +53,35 @@ export default function HeroesAdminPage() {
     e.preventDefault();
     if (!editing) return;
     setSaving(true); setError('');
-    const sb = createClient();
-    const { error: err } = editing.id
-      ? await sb.from('heroes').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
-      : await sb.from('heroes').insert({ ...editing });
-    if (err) setError(err.message);
-    else { setEditing(null); load(); }
-    setSaving(false);
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/heroes?id=${editing.id}` : '/api/admin/heroes';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editing),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save hero');
+      }
+
+      setEditing(null);
+      load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this hero banner?')) return;
-    const sb = createClient();
-    await sb.from('heroes').delete().eq('id', id);
+    setHeroes(prev => prev.filter(h => h.id !== id));
+    await fetch(`/api/admin/heroes?id=${id}`, { method: 'DELETE' });
     load();
   };
 
@@ -92,15 +113,15 @@ export default function HeroesAdminPage() {
           <div key={hero.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden flex items-center gap-4 p-4 group shadow-sm">
             <div className="flex gap-2 shrink-0">
               {hero.background_image_url && (
-                <div className="relative">
-                  <img src={hero.background_image_url} alt="Desktop" className="w-20 h-14 object-cover rounded-lg border border-neutral-200" />
-                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded font-semibold">Desk</span>
+                <div className="relative w-20 h-14 rounded-lg overflow-hidden border border-neutral-200">
+                  <ImageWithFallback src={hero.background_image_url} alt="Desktop" fallbackType="hero" />
+                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded font-semibold z-10">Desk</span>
                 </div>
               )}
               {hero.mobile_background_image_url && (
-                <div className="relative">
-                  <img src={hero.mobile_background_image_url} alt="Mobile" className="w-10 h-14 object-cover rounded-lg border border-neutral-200" />
-                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded font-semibold">Mob</span>
+                <div className="relative w-10 h-14 rounded-lg overflow-hidden border border-neutral-200">
+                  <ImageWithFallback src={hero.mobile_background_image_url} alt="Mobile" fallbackType="hero" />
+                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded font-semibold z-10">Mob</span>
                 </div>
               )}
             </div>

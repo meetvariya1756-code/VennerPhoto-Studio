@@ -12,7 +12,7 @@ interface ServiceHeroProps {
 const HERO_IMAGES: Record<string, string> = {
   'wedding-photography': 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=85',
   'engagement-photography': 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1920&q=85',
-  'baby-shower-photography': 'https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&w=1920&q=85',
+  'baby-shower-photography': 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1920&q=85',
   'children-photography': 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1920&q=85',
   'indoor-studio-photography': 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=1920&q=85',
   'product-photography': 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1920&q=85',

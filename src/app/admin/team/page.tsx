@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Plus, Trash2, Loader2, Save, X } from 'lucide-react';
 
 interface TeamMember {
@@ -26,10 +26,15 @@ export default function TeamAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data } = await sb.from('team_members').select('*').order('display_order');
-    setMembers(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/admin/team_members?order=display_order.asc');
+      const data = await res.json();
+      setMembers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load team members:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -38,18 +43,34 @@ export default function TeamAdminPage() {
     e.preventDefault();
     if (!editing) return;
     setSaving(true); setError('');
-    const sb = createClient();
-    const { error: err } = editing.id
-      ? await sb.from('team_members').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
-      : await sb.from('team_members').insert(editing);
-    if (err) setError(err.message);
-    else { setEditing(null); load(); }
-    setSaving(false);
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/team_members?id=${editing.id}` : '/api/admin/team_members';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editing),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save member');
+      }
+
+      setEditing(null);
+      load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this team member?')) return;
-    await createClient().from('team_members').delete().eq('id', id);
+    await fetch(`/api/admin/team_members?id=${id}`, { method: 'DELETE' });
     load();
   };
 
@@ -74,7 +95,7 @@ export default function TeamAdminPage() {
         {members.map((member) => (
           <div key={member.id} className="bg-white border border-neutral-200/60 rounded-xl p-5 flex items-start gap-4 shadow-sm">
             {member.photo_url ? (
-              <img src={member.photo_url} alt={member.full_name} className="w-14 h-14 object-cover rounded-full shrink-0" />
+              <div className="w-14 h-14 rounded-full overflow-hidden shrink-0"><ImageWithFallback src={member.photo_url} alt={member.full_name} fallbackType="avatar" /></div>
             ) : (
               <div className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 text-lg font-serif shrink-0 border border-neutral-200">
                 {member.full_name[0]}
@@ -123,7 +144,7 @@ export default function TeamAdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Instagram URL</label>
-                  <input type="url" value={editing.instagram_url} onChange={e => setEditing({ ...editing, instagram_url: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
+                  <input type="text" value={editing.instagram_url} onChange={e => setEditing({ ...editing, instagram_url: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Display Order</label>

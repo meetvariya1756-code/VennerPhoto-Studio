@@ -54,7 +54,7 @@ export default function ServicesGrid({ services }: ServicesGridProps) {
               >
                 {/* Background Shimmer & Fallback Image */}
                 <ImageWithFallback
-                  src={service.heroImage}
+                  src={(service as any).thumbnailImage || service.heroImage || (service as any).thumbnail_image_url || (service as any).hero_image_url}
                   fallbackType="photo"
                   fallbackIndex={index}
                   alt={service.title}

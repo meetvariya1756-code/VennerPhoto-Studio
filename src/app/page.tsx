@@ -19,7 +19,7 @@ import {
   getWeddingHighlights,
 } from '@/lib/db';
 
-export const revalidate = 86400; // Cache on edge CDN for 24 hours, revalidated on-demand
+export const revalidate = 0; // Fresh dynamic fetch on every request so admin updates show immediately
 
 export default async function HomePage() {
   const [heroes, rawServices, photos, reels, testimonials, comparisons, highlights] = await Promise.all([
@@ -36,7 +36,8 @@ export default async function HomePage() {
     ...srv,
     _id: srv.id || srv._id,
     slug: typeof srv.slug === 'object' && srv.slug ? srv.slug : { current: srv.slug },
-    heroImage: srv.hero_image_url || srv.heroImage,
+    heroImage: srv.thumbnail_image_url || srv.hero_image_url || srv.heroImage,
+    thumbnailImage: srv.thumbnail_image_url || srv.hero_image_url || srv.heroImage,
     shortDescription: srv.short_description || srv.shortDescription,
   }));
 

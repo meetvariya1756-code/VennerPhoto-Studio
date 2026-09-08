@@ -9,9 +9,9 @@ import { getServiceBySlug, getServices } from '@/lib/db';
 import { generateSiteMetadata } from '@/lib/metadata';
 import { MOCK_DATA } from '@/lib/sanity';
 
-// Allow dynamic rendering for any slug not in generateStaticParams
-export const dynamicParams = true;
-export const revalidate = 86400; // Cache on edge CDN for 24 hours, revalidated on-demand
+// Ensure dynamic data fetching so newly uploaded gallery images appear immediately
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface ServicePageProps {
   params: {
@@ -25,7 +25,8 @@ function normalizeService(srv: any) {
     ...srv,
     _id: srv.id || srv._id,
     slug: typeof srv.slug === 'object' && srv.slug ? srv.slug : { current: srv.slug },
-    heroImage: srv.hero_image_url || srv.heroImage,
+    heroImage: srv.hero_image_url || srv.thumbnail_image_url || srv.heroImage,
+    thumbnailImage: srv.thumbnail_image_url || srv.hero_image_url || srv.heroImage,
     shortDescription: srv.short_description || srv.shortDescription,
     fullDescription: srv.full_description 
       ? (Array.isArray(srv.full_description) 

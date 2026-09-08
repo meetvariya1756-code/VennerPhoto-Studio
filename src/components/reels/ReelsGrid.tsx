@@ -57,19 +57,37 @@ export default function ReelsGrid({ reels }: ReelsGridProps) {
 
       {/* Full-Screen Video Modal */}
       {activeVideoUrl && (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 md:p-12">
-          {/* Close button */}
-          <button
-            onClick={() => setActiveVideoUrl(null)}
-            className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-full border border-white/10 hover:border-white/20 transition-all z-50 focus:outline-none"
-            aria-label="Close video player"
-          >
-            <X className="w-6 h-6" />
-          </button>
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-3 sm:p-6 md:p-10"
+          onClick={() => setActiveVideoUrl(null)}
+        >
+          {/* Action buttons top bar */}
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-3 z-50">
+            {/* Close button */}
+            <button
+              onClick={() => setActiveVideoUrl(null)}
+              className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full border border-white/15 transition-all focus:outline-none shadow-lg"
+              aria-label="Close video player"
+              title="Close (Esc)"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
 
-          {/* Reel Frame Container (portrait ratio) */}
-          <div className="relative w-full max-w-lg aspect-[9/16] max-h-[85vh] shadow-2xl overflow-hidden bg-black">
-            <VideoPlayer src={activeVideoUrl} autoplay loop={false} muted={false} />
+          {/* Reel Frame Container */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-sm sm:max-w-md md:max-w-lg aspect-[9/16] max-h-[88vh] shadow-2xl overflow-hidden bg-black rounded-2xl border border-white/15 flex items-center justify-center"
+          >
+            <VideoPlayer
+              src={activeVideoUrl}
+              autoplay
+              loop={true}
+              muted={false}
+              allowRotate={true}
+              allowFitToggle={true}
+              defaultFit="cover"
+            />
           </div>
         </div>
       )}

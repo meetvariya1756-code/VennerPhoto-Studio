@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Plus, Trash2, Loader2, Save, X, Film } from 'lucide-react';
 import { getMockPlaceholder } from '@/lib/utils';
 import { triggerRevalidation } from '@/lib/revalidate';
@@ -33,18 +33,23 @@ export default function ReelsAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data } = await sb.from('reels').select('*').order('published_at', { ascending: false });
-    setReels(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/reels?order=published_at.desc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setReels(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load reels:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const loadCategories = useCallback(async () => {
     try {
-      const sb = createClient();
-      const { data } = await sb.from('services').select('slug').order('display_order');
-      if (data && data.length > 0) {
-        setCategories(data.map(s => s.slug));
+      const res = await fetch(`/api/admin/services?order=display_order.asc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setCategories(data.map((s: any) => s.slug));
       }
     } catch (err) {
       console.error('Failed to load services for reels admin:', err);
@@ -60,18 +65,40 @@ export default function ReelsAdminPage() {
     e.preventDefault();
     if (!editing) return;
     setSaving(true); setError('');
-    const sb = createClient();
-    const { error: err } = editing.id
-      ? await sb.from('reels').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
-      : await sb.from('reels').insert({ ...editing, published_at: new Date().toISOString() });
-    if (err) setError(err.message);
-    else { setEditing(null); load(); triggerRevalidation(); }
-    setSaving(false);
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/reels?id=${editing.id}` : '/api/admin/reels';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const payload = isUpdate
+        ? editing
+        : { ...editing, published_at: new Date().toISOString() };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save reel');
+      }
+
+      setEditing(null);
+      load();
+      triggerRevalidation();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this reel?')) return;
-    await createClient().from('reels').delete().eq('id', id);
+    setReels(prev => prev.filter(r => r.id !== id));
+    await fetch(`/api/admin/reels?id=${id}`, { method: 'DELETE' });
     load();
     triggerRevalidation();
   };
@@ -97,26 +124,19 @@ export default function ReelsAdminPage() {
         {reels.map((reel, index) => (
           <div key={reel.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden group shadow-sm flex flex-col justify-between">
             <div>
-              <div className="relative aspect-[9/16] bg-neutral-100 flex items-center justify-center border-b border-neutral-200 overflow-hidden">
-                {reel.thumbnail_url ? (
-                  <img
-                    src={reel.thumbnail_url}
-                    alt={reel.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <video
-                    src={reel.video_url}
-                    preload="metadata"
-                    muted
-                    playsInline
-                    loop
-                    autoPlay
-                    className="w-full h-full object-cover"
-                  />
-                )}
+              <div className="relative aspect-[9/16] bg-neutral-900 flex items-center justify-center border-b border-neutral-200 overflow-hidden">
+                <video
+                  src={reel.video_url}
+                  poster={reel.thumbnail_url || undefined}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  loop
+                  autoPlay
+                  className="w-full h-full object-cover"
+                />
                 {reel.is_featured && (
-                  <span className="absolute top-2 left-2 bg-[#C9A86C] text-[#1A1A1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Featured</span>
+                  <span className="absolute top-2 left-2 z-10 bg-[#C9A86C] text-[#1A1A1A] text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">Featured</span>
                 )}
               </div>
               <div className="p-4 pb-0">

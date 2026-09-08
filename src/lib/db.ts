@@ -1,17 +1,27 @@
 /**
  * db.ts — Central data access layer for Venner Photo Studio
- * Fetches from Supabase. Falls back to mock data when Supabase is not configured.
+ * Queries local/production PostgreSQL database (`venner_photo_studio`).
+ * Seamlessly falls back to migrated dataset (`migratedData.json`) so all real
+ * uploaded photos, reels, and services display instantly without errors.
  */
 
 import { createServerSupabaseClient } from './supabase-server';
-import { getMockPlaceholder } from './utils';
+import { queryPg } from './postgres';
+import { getLocalTable } from './localDb';
+import MIGRATED_DATA from './migratedData.json';
+
+const data = MIGRATED_DATA as any;
 
 // Check if Supabase is properly configured
-const isSupabaseConfigured =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
+function isSupabaseConfigured(): boolean {
+  return (
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
+    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('enkyolmjklvryvnzsmvt') &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key'
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // TYPES
@@ -143,154 +153,31 @@ export interface WeddingHighlight {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MOCK DATA FALLBACKS
+// HELPER FOR MERGING LOCAL DB DATA OVER POSTGRES ROWS
 // ─────────────────────────────────────────────────────────────────────
 
-const MOCK_SETTINGS: SiteSettings = {
-  id: 'mock-settings',
-  studio_name: 'Venner Photo Studio',
-  tagline: 'Capturing Timeless Moments with Cinematic Elegance',
-  phone: '+91 98259 83437',
-  email: 'vennerphoto@gmail.com',
-  address: 'B-27 Rangdarshan So-1, Dhanmora, Katargam, Surat',
-  working_hours: 'Mon - Sat: 9:00 AM - 8:00 PM',
-  sunday_hours: 'Available By Appointment Only',
-  instagram_url: 'https://www.instagram.com/vennerphoto?igsh=cW53NnFuNjduanVj',
-  facebook_url: 'https://www.facebook.com/share/18frTUd7PD/',
-  youtube_url: 'https://m.youtube.com/@vennerphoto',
-  whatsapp_number: '919825983437',
-  google_map_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3007.3462713549743!2d72.8274729!3d21.22271945!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04ebffcf5793f%3A0xf5564469239a54e7!2sVenner%20Photo%20Studio!5e1!3m2!1sen!2sin!4v1779775316406!5m2!1sen!2sin',
-  privacy_policy: '### PRIVACY POLICY & TERMS\n\nWelcome to Venner Photo Studio. We value your privacy and are committed to protecting your personal data. This policy outlines how we collect, use, and safeguard your booking information.\n\n#### 1. Information Collection\nWe collect details such as your name, email address, phone number, and event details when you submit an inquiry form or book a session with us. This information is exclusively used to coordinate photography sessions, process billing, and communicate with you.\n\n#### 2. Media Ownership & Usage\nAll photographic and motion materials captured by Venner Photo Studio remain the artistic property of the studio. Portfolios may be displayed on our official showcase channels for marketing and creative showcasing, unless mutually agreed otherwise in writing prior to the session.\n\n#### 3. Data Protection\nWe implement rigorous secure encryption and authentication protocols to safeguard your personal records and media metadata against unauthorized access or breaches.\n\n#### 4. Contact Us\nIf you have any questions, concerns, or requests regarding this policy, please reach out to us directly:\n\n* **Email:** vennerphoto@gmail.com\n* **Phone:** +91 98259 83437\n* **Studio Address:** B-27 Rangdarshan So-1, Dhanmora, Katargam, Surat',
-};
-
-const MOCK_HEROES: Hero[] = [
-  {
-    id: 'mock-hero-1',
-    title: 'Chasing the Light, Capturing the Soul',
-    subtitle: 'Premium editorial, wedding, and commercial photography tailored to your story.',
-    cta_text: 'Book Your Session',
-    cta_link: '/contact',
-    background_image_url: getMockPlaceholder('hero', 0),
-    mobile_background_image_url: getMockPlaceholder('hero', 0),
-    is_active: true,
-    display_order: 1,
-  },
-  {
-    id: 'mock-hero-2',
-    title: 'Crafted with Elegance and Passion',
-    subtitle: 'Immortalizing milestones, fashion editorials, and refined branding collections.',
-    cta_text: 'Explore Portfolio',
-    cta_link: '/portfolio',
-    background_image_url: getMockPlaceholder('hero', 1),
-    mobile_background_image_url: getMockPlaceholder('hero', 1),
-    is_active: true,
-    display_order: 2,
-  },
-];
-
-const MOCK_SERVICES: Service[] = [
-  { id: 's1', title: 'Wedding Photography', slug: 'wedding-photography', short_description: 'Capturing your most precious moments on your special day with cinematic elegance.', full_description: '', hero_image_url: getMockPlaceholder('photo', 0), is_active: true, display_order: 1, seo_title: '', seo_description: '' },
-  { id: 's2', title: 'Engagement Photography', slug: 'engagement-photography', short_description: 'Beautiful pre-wedding shoots that tell your unique love story.', full_description: '', hero_image_url: getMockPlaceholder('photo', 1), is_active: true, display_order: 2, seo_title: '', seo_description: '' },
-  { id: 's3', title: 'Baby Shower Photography', slug: 'baby-shower-photography', short_description: 'Cherish the excitement of welcoming a new life with timeless photos.', full_description: '', hero_image_url: getMockPlaceholder('photo', 2), is_active: true, display_order: 3, seo_title: '', seo_description: '' },
-  { id: 's4', title: 'Children Photography', slug: 'children-photography', short_description: 'Playful, candid, and expressive portraits of your little ones.', full_description: '', hero_image_url: getMockPlaceholder('photo', 3), is_active: true, display_order: 4, seo_title: '', seo_description: '' },
-  { id: 's5', title: 'Indoor Studio Photography', slug: 'indoor-studio-photography', short_description: 'Professional controlled lighting studio sessions for portraits and creative shoots.', full_description: '', hero_image_url: getMockPlaceholder('photo', 4), is_active: true, display_order: 5, seo_title: '', seo_description: '' },
-  { id: 's6', title: 'Product Photography', slug: 'product-photography', short_description: 'High-quality commercial product photos that make your brand stand out.', full_description: '', hero_image_url: getMockPlaceholder('photo', 5), is_active: true, display_order: 6, seo_title: '', seo_description: '' },
-  { id: 's7', title: 'Modeling Photography', slug: 'modeling-photography', short_description: 'Portfolio and editorial modeling shoots for aspiring and professional models.', full_description: '', hero_image_url: getMockPlaceholder('photo', 6), is_active: true, display_order: 7, seo_title: '', seo_description: '' },
-  { id: 's8', title: 'Corporate Event Photography', slug: 'corporate-event-photography', short_description: 'Professional documentation of conferences, seminars, and corporate events.', full_description: '', hero_image_url: getMockPlaceholder('photo', 7), is_active: true, display_order: 8, seo_title: '', seo_description: '' },
-  { id: 's9', title: 'Birthday Photography', slug: 'birthday-photography', short_description: 'Fun and vibrant photos to celebrate your birthday milestones.', full_description: '', hero_image_url: getMockPlaceholder('photo', 8), is_active: true, display_order: 9, seo_title: '', seo_description: '' },
-  { id: 's10', title: 'Maternity Photography', slug: 'maternity-photography', short_description: 'Elegant and emotive portraits celebrating the beauty of pregnancy.', full_description: '', hero_image_url: getMockPlaceholder('photo', 9), is_active: true, display_order: 10, seo_title: '', seo_description: '' },
-];
-
-const MOCK_PORTFOLIO: PortfolioPhoto[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `mock-photo-${i}`,
-  title: ['Eternal Vows', 'Sunset Romance', 'Golden Hour Smile', 'Pure Innocence', 'Shadow Play', 'Aesthetic Geometry', 'High-Fashion Bold', 'Leadership Conference', 'Vibrant Milestones', 'Motherhood Grace', 'Studio Radiance', 'Candid Joy'][i],
-  image_url: getMockPlaceholder('photo', i % 10),
-  category: ['wedding-photography', 'engagement-photography', 'baby-shower-photography', 'children-photography', 'indoor-studio-photography', 'product-photography', 'modeling-photography', 'corporate-event-photography', 'birthday-photography', 'maternity-photography', 'indoor-studio-photography', 'wedding-photography'][i],
-  alt_text: '',
-  tags: [],
-  is_featured: i < 6,
-  captured_date: null,
-}));
-
-const MOCK_REELS: Reel[] = [
-  { id: 'r1', title: 'The Cinematic Wedding Dream', video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4', thumbnail_url: getMockPlaceholder('video-thumb', 0), category: 'wedding-photography', is_featured: true, published_at: new Date().toISOString() },
-  { id: 'r2', title: 'Minimalist Leather Branding', video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4', thumbnail_url: getMockPlaceholder('video-thumb', 1), category: 'product-photography', is_featured: true, published_at: new Date().toISOString() },
-  { id: 'r3', title: 'Neon Studio Fashion Editorial', video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4', thumbnail_url: getMockPlaceholder('video-thumb', 2), category: 'modeling-photography', is_featured: true, published_at: new Date().toISOString() },
-  { id: 'r4', title: 'Sweet Maternity Golden Session', video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4', thumbnail_url: getMockPlaceholder('video-thumb', 0), category: 'maternity-photography', is_featured: false, published_at: new Date().toISOString() },
-];
-
-const MOCK_TEAM: TeamMember[] = [
-  { id: 't1', full_name: 'Julian Venner', role: 'Founder & Principal Photographer', bio: 'With over 12 years of experience capturing global fashion campaigns and elite destination weddings, Julian drives the artistic vision of Venner Studio.', photo_url: getMockPlaceholder('avatar', 0), specialization: 'Weddings & High Fashion Editorials', instagram_url: '', display_order: 1 },
-  { id: 't2', full_name: 'Sophia Reyes', role: 'Lead Lifestyle Photographer', bio: 'Sophia is a mastermind at children and maternity stories, capturing soft, emotive and natural lighting profiles.', photo_url: getMockPlaceholder('avatar', 1), specialization: 'Maternity, Children & Family Portraits', instagram_url: '', display_order: 2 },
-  { id: 't3', full_name: 'Marcus Vance', role: 'Senior Retoucher & Studio Artist', bio: 'Marcus meticulously refines every single piece of artwork, ensuring publication-quality color palettes and flawless tones.', photo_url: getMockPlaceholder('avatar', 2), specialization: 'Digital Art & Commercial Color Grading', instagram_url: '', display_order: 3 },
-];
-
-const MOCK_TESTIMONIALS: Testimonial[] = [
-  { id: 'ts1', client_name: 'Alexander & Evelyn', service_type: 'Wedding Photography', quote: 'Our wedding album is a masterpiece. Julian did not just take photos; he captured the exact emotions we felt.', rating: 5, is_active: true },
-  { id: 'ts2', client_name: 'Nouveau Couture', service_type: 'Product Photography', quote: 'Stunning commercial results! Our website conversion rate increased by 40% after posting Venner Photo Studio\'s portfolios.', rating: 5, is_active: true },
-  { id: 'ts3', client_name: 'Clara Bennett', service_type: 'Maternity Photography', quote: 'Sophia made me feel incredibly comfortable, and the maternity shoot is absolutely breathtaking.', rating: 5, is_active: true },
-];
-
-const MOCK_COMPARISONS: BeforeAfterComparison[] = [
-  {
-    id: 'mc1',
-    title: 'Outdoor Golden Hour Retouch',
-    description: 'Enhancing warm skin tones, golden hour contrast, and soft background details while retaining realistic hair and skin textures.',
-    before_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80&sat=-50',
-    after_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1200&q=80',
-    is_active: true,
-    display_order: 1
-  },
-  {
-    id: 'mc2',
-    title: 'Controlled Studio Lighting',
-    description: 'Balancing skin smooth tones, highlights, shadow depths, and modern fashion background color-grading.',
-    before_image_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80&sat=-40&contrast=10',
-    after_image_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80',
-    is_active: true,
-    display_order: 2
+function mergeWithLocal<T extends { id?: string }>(dbRows: T[], tableName: string): T[] {
+  const local = getLocalTable(tableName);
+  if (!local || local.length === 0) {
+    return dbRows;
   }
-];
+  const localMap = new Map<string, any>(local.filter((x: any) => x && x.id).map((item: any) => [item.id, item]));
+  const dbIdSet = new Set(dbRows.filter((x: any) => x && x.id).map((r: any) => r.id));
 
-const MOCK_HIGHLIGHTS: WeddingHighlight[] = [
-  {
-    id: 'mh1',
-    title: 'The Royal Heritage Vows',
-    video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
-    thumbnail_url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
-    seo_title: 'Royal Heritage Wedding Highlights',
-    seo_description: 'Widescreen cinematic wedding highlight film captured at the heritage palace.',
-    is_active: true,
-    display_order: 1
-  },
-  {
-    id: 'mh2',
-    title: 'Golden Hour Lakeside Union',
-    video_url: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
-    thumbnail_url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
-    seo_title: 'Lakeside Wedding Highlights Film',
-    seo_description: 'Sunset lake vows cinematic highlights video with warm grade palette.',
-    is_active: true,
-    display_order: 2
+  const merged: T[] = dbRows.map((r: any) => {
+    if (r.id && localMap.has(r.id)) {
+      return { ...r, ...localMap.get(r.id) };
+    }
+    return r;
+  });
+
+  for (const item of local) {
+    if (item && item.id && !dbIdSet.has(item.id)) {
+      merged.push(item);
+    }
   }
-];
 
-// ─────────────────────────────────────────────────────────────────────
-// HELPER — safe supabase query with fallback
-// ─────────────────────────────────────────────────────────────────────
-
-async function safeQuery<T>(
-  fn: () => Promise<{ data: T | null; error: unknown }>,
-  fallback: T
-): Promise<T> {
-  if (!isSupabaseConfigured) return fallback;
-  try {
-    const { data, error } = await fn();
-    if (error || !data) return fallback;
-    return data;
-  } catch {
-    return fallback;
-  }
+  return merged;
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -298,103 +185,138 @@ async function safeQuery<T>(
 // ─────────────────────────────────────────────────────────────────────
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('site_settings').select('*').limit(1).single();
-  }, MOCK_SETTINGS);
+  const rows = await queryPg<SiteSettings>('SELECT * FROM public.site_settings LIMIT 1');
+  const merged = mergeWithLocal<SiteSettings>(rows, 'site_settings');
+  if (merged.length > 0) return merged[0];
+  if (data.site_settings?.length > 0) return data.site_settings[0];
+  return {
+    id: 'default',
+    studio_name: 'Venner Photo Studio',
+    tagline: 'Capturing Timeless Moments with Cinematic Elegance',
+    phone: '+91 98259 83437',
+    email: 'vennerphoto@gmail.com',
+    address: 'B-27 Rangdarshan So-1, Dhanmora, Katargam, Surat',
+    working_hours: 'Mon - Sat: 9:00 AM - 8:00 PM',
+    sunday_hours: 'Available By Appointment Only',
+    instagram_url: 'https://www.instagram.com/vennerphoto?igsh=cW53NnFuNjduanVj',
+    facebook_url: 'https://www.facebook.com/share/18frTUd7PD/',
+    youtube_url: 'https://m.youtube.com/@vennerphoto',
+    whatsapp_number: '919825983437',
+    google_map_embed_url: '',
+    privacy_policy: '### PRIVACY POLICY & TERMS'
+  };
 }
 
 export async function getHeroes(): Promise<Hero[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('heroes').select('*').eq('is_active', true).order('display_order');
-  }, MOCK_HEROES);
+  const rows = await queryPg<Hero>('SELECT * FROM public.heroes WHERE is_active = TRUE ORDER BY display_order ASC');
+  const merged = mergeWithLocal<Hero>(rows, 'heroes');
+  if (merged.length > 0) return merged.filter((h: any) => h.is_active !== false);
+  if (data.heroes?.length > 0) return data.heroes;
+  return [];
 }
 
 export async function getServices(): Promise<Service[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('services').select('*').eq('is_active', true).order('display_order');
-  }, MOCK_SERVICES);
+  const rows = await queryPg<Service>('SELECT * FROM public.services WHERE is_active = TRUE ORDER BY display_order ASC');
+  const merged = mergeWithLocal<Service>(rows, 'services');
+  if (merged.length > 0) return merged.filter((s: any) => s.is_active !== false);
+  if (data.services?.length > 0) return data.services;
+  return [];
 }
 
 export async function getServiceBySlug(slug: string): Promise<Service | null> {
-  if (!isSupabaseConfigured) {
-    return MOCK_SERVICES.find(s => s.slug === slug) || null;
-  }
-  try {
-    const sb = await createServerSupabaseClient();
-    const { data: service, error } = await sb
-      .from('services')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+  const services = await getServices();
+  const service = services.find((s: any) => s.slug === slug);
+  if (service) {
+    let gallery = await queryPg<ServiceGalleryImage>('SELECT * FROM public.service_gallery WHERE service_id = $1 ORDER BY display_order ASC', [service.id]);
+    gallery = mergeWithLocal<ServiceGalleryImage>(gallery, 'service_gallery').filter((g: any) => g.service_id === service.id);
 
-    if (error || !service) {
-      return MOCK_SERVICES.find(s => s.slug === slug) || null;
-    }
-
-    // Fetch related gallery and packages
-    const [{ data: gallery }, { data: packages }] = await Promise.all([
-      sb.from('service_gallery').select('*').eq('service_id', service.id).order('display_order'),
-      sb.from('service_packages').select('*').eq('service_id', service.id).order('display_order'),
-    ]);
+    let packages = await queryPg<ServicePackage>('SELECT * FROM public.service_packages WHERE service_id = $1 ORDER BY display_order ASC', [service.id]);
+    packages = mergeWithLocal<ServicePackage>(packages, 'service_packages').filter((p: any) => p.service_id === service.id);
 
     return {
       ...service,
       gallery: gallery || [],
       packages: packages || [],
     };
-  } catch {
-    return MOCK_SERVICES.find(s => s.slug === slug) || null;
   }
+
+  // Fallback to migrated dataset
+  const migratedServices = data.services || [];
+  const migratedService = migratedServices.find((s: any) => s.slug === slug);
+  if (migratedService) {
+    const gallery = (data.service_gallery || []).filter((g: any) => g.service_id === migratedService.id);
+    const packages = (data.service_packages || []).filter((p: any) => p.service_id === migratedService.id);
+    return {
+      ...migratedService,
+      gallery: gallery || [],
+      packages: packages || [],
+    };
+  }
+
+  return null;
 }
 
 export async function getPortfolioPhotos(): Promise<PortfolioPhoto[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('portfolio_photos').select('*').order('created_at', { ascending: false });
-  }, MOCK_PORTFOLIO);
+  const rows = await queryPg<PortfolioPhoto>('SELECT * FROM public.portfolio_photos ORDER BY created_at DESC');
+  const merged = mergeWithLocal<PortfolioPhoto>(rows, 'portfolio_photos');
+  let photos = merged.length > 0 ? merged : data.portfolio_photos || [];
+  return photos.map((p: any, idx: number) => ({
+    ...p,
+    id: p.id || p._id || `p_${idx}`,
+    image_url: p.image_url || p.image || undefined,
+  }));
 }
 
 export async function getFeaturedPortfolioPhotos(): Promise<PortfolioPhoto[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('portfolio_photos').select('*').eq('is_featured', true).order('created_at', { ascending: false }).limit(9);
-  }, MOCK_PORTFOLIO.filter(p => p.is_featured));
+  const rows = await queryPg<PortfolioPhoto>('SELECT * FROM public.portfolio_photos ORDER BY is_featured DESC, created_at DESC LIMIT 9');
+  const merged = mergeWithLocal<PortfolioPhoto>(rows, 'portfolio_photos');
+  let photos: any[] = merged.filter((p: any) => p.is_featured);
+  if (photos.length === 0) photos = merged.slice(0, 9);
+  if (photos.length === 0) photos = (data.portfolio_photos || []).slice(0, 9);
+  return photos.map((p: any, idx: number) => ({
+    ...p,
+    id: p.id || p._id || `p_feat_${idx}`,
+    image_url: p.image_url || p.image || undefined,
+  }));
 }
 
 export async function getReels(): Promise<Reel[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('reels').select('*').order('published_at', { ascending: false });
-  }, MOCK_REELS);
+  const rows = await queryPg<Reel>('SELECT * FROM public.reels ORDER BY published_at DESC');
+  const merged = mergeWithLocal<Reel>(rows, 'reels');
+  if (merged.length > 0) return merged;
+  if (data.reels?.length > 0) return data.reels;
+  return [];
 }
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('team_members').select('*').order('display_order');
-  }, MOCK_TEAM);
+  const rows = await queryPg<TeamMember>('SELECT * FROM public.team_members ORDER BY display_order ASC');
+  const merged = mergeWithLocal<TeamMember>(rows, 'team_members');
+  if (merged.length > 0) return merged;
+  if (data.team_members?.length > 0) return data.team_members;
+  return [];
 }
 
 export async function getTestimonials(): Promise<Testimonial[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('testimonials').select('*').eq('is_active', true).order('created_at', { ascending: false });
-  }, MOCK_TESTIMONIALS);
+  const rows = await queryPg<Testimonial>('SELECT * FROM public.testimonials WHERE is_active = TRUE ORDER BY created_at DESC');
+  const merged = mergeWithLocal<Testimonial>(rows, 'testimonials');
+  if (merged.length > 0) return merged.filter((t: any) => t.is_active !== false);
+  if (data.testimonials?.length > 0) return data.testimonials;
+  return [];
 }
 
 export async function getBeforeAfterComparisons(): Promise<BeforeAfterComparison[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('before_after_comparisons').select('*').eq('is_active', true).order('display_order');
-  }, MOCK_COMPARISONS);
+  const rows = await queryPg<BeforeAfterComparison>('SELECT * FROM public.before_after_comparisons WHERE is_active = TRUE ORDER BY display_order ASC');
+  const merged = mergeWithLocal<BeforeAfterComparison>(rows, 'before_after_comparisons');
+  if (merged.length > 0) return merged.filter((b: any) => b.is_active !== false);
+  if (data.before_after_comparisons?.length > 0) return data.before_after_comparisons;
+  return [];
 }
 
 export async function getWeddingHighlights(): Promise<WeddingHighlight[]> {
-  return safeQuery(async () => {
-    const sb = await createServerSupabaseClient();
-    return sb.from('wedding_highlights').select('*').eq('is_active', true).order('display_order');
-  }, MOCK_HIGHLIGHTS);
+  const rows = await queryPg<WeddingHighlight>('SELECT * FROM public.wedding_highlights WHERE is_active = TRUE ORDER BY display_order ASC');
+  const merged = mergeWithLocal<WeddingHighlight>(rows, 'wedding_highlights');
+  if (merged.length > 0) return merged.filter((w: any) => w.is_active !== false);
+  if (data.wedding_highlights?.length > 0) return data.wedding_highlights;
+  return [];
 }
+

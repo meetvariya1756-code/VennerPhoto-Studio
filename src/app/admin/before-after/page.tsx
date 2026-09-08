@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
 import { Plus, Trash2, Loader2, Save, X, Columns } from 'lucide-react';
 import { triggerRevalidation } from '@/lib/revalidate';
@@ -33,13 +32,15 @@ export default function BeforeAfterAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data } = await sb
-      .from('before_after_comparisons')
-      .select('*')
-      .order('display_order');
-    setComparisons(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/before_after_comparisons?order=display_order.asc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setComparisons(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load before/after comparisons:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -51,29 +52,36 @@ export default function BeforeAfterAdminPage() {
     if (!editing) return;
     setSaving(true);
     setError('');
-    const sb = createClient();
-    
-    const { error: err } = editing.id
-      ? await sb
-          .from('before_after_comparisons')
-          .update({ ...editing, updated_at: new Date().toISOString() })
-          .eq('id', editing.id)
-      : await sb.from('before_after_comparisons').insert({ ...editing });
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/before_after_comparisons?id=${editing.id}` : '/api/admin/before_after_comparisons';
+      const method = isUpdate ? 'PUT' : 'POST';
 
-    if (err) {
-      setError(err.message);
-    } else {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editing),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save slider');
+      }
+
       setEditing(null);
       load();
       triggerRevalidation();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this before/after comparison slider?')) return;
-    const sb = createClient();
-    await sb.from('before_after_comparisons').delete().eq('id', id);
+    setComparisons(prev => prev.filter(item => item.id !== id));
+    await fetch(`/api/admin/before_after_comparisons?id=${id}`, { method: 'DELETE' });
     load();
     triggerRevalidation();
   };

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { createClient } from '@/lib/supabase';
+import MediaUpload from '@/components/admin/MediaUpload';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Plus, Trash2, Loader2, Save, X, Upload, Star } from 'lucide-react';
 import { triggerRevalidation } from '@/lib/revalidate';
+import { compressImageFile } from '@/lib/utils';
 
 interface Photo {
   id?: string;
@@ -43,18 +45,23 @@ export default function PortfolioAdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data } = await sb.from('portfolio_photos').select('*').order('created_at', { ascending: false });
-    setPhotos(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/portfolio_photos?order=created_at.desc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setPhotos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load portfolio photos:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const loadCategories = useCallback(async () => {
     try {
-      const sb = createClient();
-      const { data } = await sb.from('services').select('title, slug').order('display_order');
-      if (data && data.length > 0) {
-        setCategories(data.map(s => ({
+      const res = await fetch(`/api/admin/services?order=display_order.asc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setCategories(data.map((s: any) => ({
           value: s.slug,
           label: s.title.replace(/\s+photography$/i, '')
         })));
@@ -72,22 +79,36 @@ export default function PortfolioAdminPage() {
   // Bulk upload multiple images at once
   const handleBulkUpload = async (files: FileList) => {
     setUploading(true);
-    const sb = createClient();
-    const uploads = Array.from(files).map(async (file) => {
-      const ext = file.name.split('.').pop();
-      const path = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { data, error } = await sb.storage.from('media').upload(path, file, { upsert: true });
-      if (error || !data) return;
-      const { data: { publicUrl } } = sb.storage.from('media').getPublicUrl(data.path);
-      await sb.from('portfolio_photos').insert({
-        title: file.name.replace(/\.[^/.]+$/, ''),
-        image_url: publicUrl,
-        category: 'wedding-photography',
-        is_featured: false,
-        tags: [],
-      });
-    });
-    await Promise.all(uploads);
+    const fileArray = Array.from(files);
+    for (const rawFile of fileArray) {
+      try {
+        const file = await compressImageFile(rawFile);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'portfolio');
+
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (!uploadData.url) continue;
+
+        await fetch('/api/admin/portfolio_photos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: rawFile.name.replace(/\.[^/.]+$/, ''),
+            image_url: uploadData.url,
+            category: 'wedding-photography',
+            is_featured: false,
+            tags: [],
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to bulk upload file:', rawFile.name, err);
+      }
+    }
     setUploading(false);
     load();
     triggerRevalidation();
@@ -97,24 +118,52 @@ export default function PortfolioAdminPage() {
     e.preventDefault();
     if (!editing) return;
     setSaving(true); setError('');
-    const sb = createClient();
-    const { error: err } = editing.id
-      ? await sb.from('portfolio_photos').update({ ...editing, updated_at: new Date().toISOString() }).eq('id', editing.id)
-      : await sb.from('portfolio_photos').insert(editing);
-    if (err) setError(err.message);
-    else { setEditing(null); load(); triggerRevalidation(); }
-    setSaving(false);
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/portfolio_photos?id=${editing.id}` : '/api/admin/portfolio_photos';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editing),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save photo');
+      }
+
+      setEditing(null);
+      load();
+      triggerRevalidation();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id?: string) => {
+    if (!id) return;
     if (!confirm('Delete this photo?')) return;
-    await createClient().from('portfolio_photos').delete().eq('id', id);
-    load();
-    triggerRevalidation();
+    setPhotos(p => p.filter(x => x.id !== id));
+    try {
+      await fetch(`/api/admin/portfolio_photos?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      load();
+      triggerRevalidation();
+    } catch (err) {
+      console.error('Failed to delete portfolio photo:', err);
+    }
   };
 
   const toggleFeatured = async (photo: Photo) => {
-    await createClient().from('portfolio_photos').update({ is_featured: !photo.is_featured }).eq('id', photo.id!);
+    if (!photo.id) return;
+    await fetch(`/api/admin/portfolio_photos?id=${photo.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_featured: !photo.is_featured }),
+    });
     load();
     triggerRevalidation();
   };
@@ -158,11 +207,11 @@ export default function PortfolioAdminPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {filtered.map((photo) => (
           <div key={photo.id} className="group relative aspect-square bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200 shadow-sm">
-            <img src={photo.image_url} alt={photo.title} className="w-full h-full object-cover" />
+            <ImageWithFallback src={photo.image_url} alt={photo.title} fallbackType="photo" />
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-200 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-              <button onClick={() => setEditing(photo)} className="bg-white/25 hover:bg-[#C9A86C] text-white hover:text-[#1A1A1A] text-xs px-3 py-1.5 rounded-lg transition-all font-semibold">Edit</button>
-              <button onClick={() => handleDelete(photo.id!)} className="bg-red-600/80 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg transition-all">Delete</button>
+              <button type="button" onClick={() => setEditing(photo)} className="bg-white/25 hover:bg-[#C9A86C] text-white hover:text-[#1A1A1A] text-xs px-3 py-1.5 rounded-lg transition-all font-semibold">Edit</button>
+              <button type="button" onClick={() => photo.id && handleDelete(photo.id)} className="bg-red-600/80 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg transition-all">Delete</button>
             </div>
             {/* Featured badge */}
             <button onClick={() => toggleFeatured(photo)} className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${photo.is_featured ? 'bg-[#C9A86C]' : 'bg-black/40 opacity-0 group-hover:opacity-100'}`}>
@@ -185,14 +234,14 @@ export default function PortfolioAdminPage() {
               <button onClick={() => setEditing(null)}><X className="w-5 h-5 text-neutral-400 hover:text-[#1A1A1A]" /></button>
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
-              {/* Image Preview / URL */}
-              {editing.image_url && (
-                <img src={editing.image_url} alt="" className="w-full h-48 object-cover rounded-xl mb-2 shadow-sm border border-neutral-200" />
-              )}
-              <div>
-                <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Image URL *</label>
-                <input required value={editing.image_url} onChange={e => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://... or upload via Bulk Upload" className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />
-              </div>
+              {/* Image Upload Component */}
+              <MediaUpload
+                type="image"
+                folder="portfolio"
+                currentUrl={editing.image_url}
+                onUpload={(url) => setEditing({ ...editing, image_url: url })}
+                label="Upload Image File *"
+              />
               <div>
                 <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Title</label>
                 <input value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors shadow-sm" />

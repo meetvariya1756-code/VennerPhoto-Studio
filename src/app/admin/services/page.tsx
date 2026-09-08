@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Plus, Trash2, Loader2, Save, X, ChevronRight, Images, Tag, ArrowLeft } from 'lucide-react';
+import { triggerRevalidation } from '@/lib/revalidate';
 
 interface ServicePackage { id?: string; service_id?: string; package_name: string; price: string; features: string[]; display_order: number; }
 interface GalleryImage { id?: string; service_id?: string; image_url: string; alt_text: string; display_order: number; sub_category?: string | null; }
@@ -26,19 +27,34 @@ export default function ServicesAdminPage() {
   const [uploadCategory, setUploadCategory] = useState<'general' | 'candid' | 'portrait'>('general');
 
   const loadServices = useCallback(async () => {
-    const { data } = await createClient().from('services').select('*').order('display_order');
-    setServices(data || []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/services?order=display_order.asc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setServices(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load services:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const loadServiceDetails = useCallback(async (svc: Service) => {
-    const sb = createClient();
-    const [{ data: gal }, { data: pkgs }] = await Promise.all([
-      sb.from('service_gallery').select('*').eq('service_id', svc.id!).order('display_order'),
-      sb.from('service_packages').select('*').eq('service_id', svc.id!).order('display_order'),
-    ]);
-    setGallery(gal || []);
-    setPackages(pkgs || []);
+    if (!svc.id) return;
+    try {
+      const [galRes, pkgRes] = await Promise.all([
+        fetch(`/api/admin/service_gallery?order=display_order.asc&limit=500&t=${Date.now()}`, { cache: 'no-store' }),
+        fetch(`/api/admin/service_packages?order=display_order.asc&limit=500&t=${Date.now()}`, { cache: 'no-store' }),
+      ]);
+      const [galData, pkgData] = await Promise.all([galRes.json(), pkgRes.json()]);
+
+      const filteredGallery = Array.isArray(galData) ? galData.filter((g: any) => g.service_id === svc.id) : [];
+      const filteredPackages = Array.isArray(pkgData) ? pkgData.filter((p: any) => p.service_id === svc.id) : [];
+
+      setGallery(filteredGallery);
+      setPackages(filteredPackages);
+    } catch (err) {
+      console.error('Failed to load service details:', err);
+    }
   }, []);
 
   useEffect(() => { loadServices(); }, [loadServices]);
@@ -58,71 +74,135 @@ export default function ServicesAdminPage() {
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setError('');
-    const sb = createClient();
-    const { error: err } = editForm.id
-      ? await sb.from('services').update({ ...editForm, updated_at: new Date().toISOString() }).eq('id', editForm.id)
-      : await sb.from('services').insert(editForm);
-    if (err) setError(err.message);
-    else { setView('list'); loadServices(); }
-    setSaving(false);
+    try {
+      const isUpdate = !!editForm.id;
+      const url = isUpdate ? `/api/admin/services?id=${editForm.id}` : '/api/admin/services';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save service');
+      }
+
+      setView('list');
+      loadServices();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDeleteService = async (id: string) => {
     if (!confirm('Delete this service and all its gallery photos and packages?')) return;
-    await createClient().from('services').delete().eq('id', id);
+    await fetch(`/api/admin/services?id=${id}`, { method: 'DELETE' });
     loadServices();
   };
 
   // Gallery management
   const addGalleryImage = async (imageUrl: string) => {
     if (!selected?.id || !imageUrl) return;
-    const sb = createClient();
     const subCat = uploadCategory === 'general' ? null : uploadCategory;
-    const { data } = await sb.from('service_gallery').insert({ service_id: selected.id, image_url: imageUrl, alt_text: '', display_order: gallery.length + 1, sub_category: subCat }).select().single();
-    if (data) setGallery(g => [...g, data]);
+    const res = await fetch('/api/admin/service_gallery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: selected.id,
+        image_url: imageUrl,
+        alt_text: '',
+        display_order: gallery.length + 1,
+        sub_category: subCat,
+      }),
+    });
+    const data = await res.json();
+    if (data && !data.error) {
+      const newImg = Array.isArray(data) ? data[0] : data;
+      if (newImg) {
+        setGallery(prev => [...prev.filter(g => g.id !== newImg.id && g.image_url !== newImg.image_url), newImg]);
+      }
+      if (selected) loadServiceDetails(selected);
+      triggerRevalidation();
+    }
   };
 
   const addGalleryImages = async (imageUrls: string[]) => {
     if (!selected?.id || !imageUrls || imageUrls.length === 0) return;
-    const sb = createClient();
     const subCat = uploadCategory === 'general' ? null : uploadCategory;
     const rows = imageUrls.map((url, idx) => ({
       service_id: selected?.id,
       image_url: url,
       alt_text: '',
       display_order: gallery.length + idx + 1,
-      sub_category: subCat
+      sub_category: subCat,
     }));
-    const { data } = await sb.from('service_gallery').insert(rows).select();
-    if (data) setGallery(g => [...g, ...data]);
+    const res = await fetch('/api/admin/service_gallery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rows),
+    });
+    const data = await res.json();
+    if (data && !data.error) {
+      const newItems = Array.isArray(data) ? data : [data];
+      if (newItems.length > 0) {
+        setGallery(prev => {
+          const ids = new Set(newItems.map((n: any) => n.id));
+          const urls = new Set(newItems.map((n: any) => n.image_url));
+          return [...prev.filter(g => !ids.has(g.id) && !urls.has(g.image_url)), ...newItems];
+        });
+      }
+      if (selected) loadServiceDetails(selected);
+      triggerRevalidation();
+    }
   };
 
-  const removeGalleryImage = async (id: string) => {
-    await createClient().from('service_gallery').delete().eq('id', id);
+  const removeGalleryImage = async (id?: string) => {
+    if (!id) return;
     setGallery(g => g.filter(img => img.id !== id));
+    try {
+      await fetch(`/api/admin/service_gallery?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      triggerRevalidation();
+    } catch (err) {
+      console.error('Failed to delete gallery image:', err);
+    }
   };
 
   const updateGalleryImageSubCategory = async (id: string, subCategory: string | null) => {
-    const sb = createClient();
-    await sb.from('service_gallery').update({ sub_category: subCategory }).eq('id', id);
+    await fetch(`/api/admin/service_gallery?id=${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sub_category: subCategory }),
+    });
     setGallery(g => g.map(img => img.id === id ? { ...img, sub_category: subCategory } : img));
   };
 
   // Package management
   const savePackage = async (pkg: ServicePackage) => {
-    const sb = createClient();
     if (pkg.id) {
-      await sb.from('service_packages').update(pkg).eq('id', pkg.id);
+      await fetch(`/api/admin/service_packages?id=${pkg.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pkg),
+      });
+      setPackages(p => p.map(x => x.id === pkg.id ? pkg : x));
     } else {
-      const { data } = await sb.from('service_packages').insert({ ...pkg, service_id: selected?.id }).select().single();
-      if (data) setPackages(p => [...p, data]);
-      return;
+      const res = await fetch('/api/admin/service_packages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...pkg, service_id: selected?.id }),
+      });
+      const data = await res.json();
+      if (data && !data.error) setPackages(p => [...p, data]);
     }
-    setPackages(p => p.map(x => x.id === pkg.id ? pkg : x));
   };
 
   const removePackage = async (id: string) => {
-    await createClient().from('service_packages').delete().eq('id', id);
+    await fetch(`/api/admin/service_packages?id=${id}`, { method: 'DELETE' });
     setPackages(p => p.filter(x => x.id !== id));
   };
 
@@ -143,7 +223,7 @@ export default function ServicesAdminPage() {
       <div className="space-y-3">
         {services.map((svc) => (
           <div key={svc.id} className="bg-white border border-neutral-200/60 rounded-xl p-5 flex items-center gap-4 shadow-sm">
-            {svc.hero_image_url && <img src={svc.hero_image_url} alt={svc.title} className="w-16 h-12 object-cover rounded-lg shrink-0" />}
+            {svc.hero_image_url && <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0"><ImageWithFallback src={svc.hero_image_url} alt={svc.title} fallbackType="photo" /></div>}
             <div className="flex-1 min-w-0">
               <p className="text-[#1A1A1A] font-semibold text-sm">{svc.title}</p>
               <p className="text-neutral-400 text-xs mt-0.5 truncate">{svc.short_description}</p>
@@ -185,11 +265,11 @@ export default function ServicesAdminPage() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Short Description</label>
-            <textarea value={editForm.short_description} onChange={e => setEditForm(f => ({ ...f, short_description: e.target.value }))} rows={2} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors resize-none shadow-sm" />
+            <textarea value={editForm.short_description || ''} onChange={e => setEditForm(f => ({ ...f, short_description: e.target.value }))} rows={2} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors resize-none shadow-sm" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Full Description</label>
-            <textarea value={editForm.full_description} onChange={e => setEditForm(f => ({ ...f, full_description: e.target.value }))} rows={5} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors resize-none shadow-sm" />
+            <textarea value={editForm.full_description || ''} onChange={e => setEditForm(f => ({ ...f, full_description: e.target.value }))} rows={5} className="w-full bg-white border border-neutral-300 rounded-lg px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#C9A86C] focus:ring-1 focus:ring-[#C9A86C]/30 transition-colors resize-none shadow-sm" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <MediaUpload type="image" folder="services" currentUrl={editForm.hero_image_url} onUpload={url => setEditForm(f => ({ ...f, hero_image_url: url }))} label="Detail Page Hero Banner Image" />
@@ -269,8 +349,16 @@ export default function ServicesAdminPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {gallery.map((img) => (
           <div key={img.id} className="group relative aspect-square bg-neutral-100 rounded-xl overflow-hidden border border-neutral-200 shadow-sm">
-            <img src={img.image_url} alt={img.alt_text} className="w-full h-full object-cover" />
-            <button onClick={() => removeGalleryImage(img.id!)} className="absolute top-2 right-2 w-7 h-7 bg-red-600/90 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <ImageWithFallback src={img.image_url} alt={img.alt_text || 'Service Gallery Image'} fallbackType="photo" />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (img.id) removeGalleryImage(img.id);
+              }}
+              className="absolute top-2 right-2 w-7 h-7 bg-red-600/90 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20 shadow-md cursor-pointer"
+              title="Delete Image"
+            >
               <X className="w-3.5 h-3.5" />
             </button>
             {selected?.slug === 'wedding-photography' && (

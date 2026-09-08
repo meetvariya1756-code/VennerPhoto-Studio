@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase';
 import { Save, Loader2, CheckCircle } from 'lucide-react';
 import { triggerRevalidation } from '@/lib/revalidate';
 
@@ -74,10 +73,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const load = async () => {
-      const sb = createClient();
-      const { data } = await sb.from('site_settings').select('*').limit(1).single();
-      if (data) setSettings(data);
-      setLoading(false);
+      try {
+        const res = await fetch('/api/admin/site_settings?limit=1');
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setSettings(data[0]);
+        }
+      } catch (err) {
+        console.error('Failed to load site settings:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -90,13 +96,33 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     setError('');
-    const sb = createClient();
-    const { error: err } = settings.id
-      ? await sb.from('site_settings').update({ ...settings, updated_at: new Date().toISOString() }).eq('id', settings.id)
-      : await sb.from('site_settings').insert(settings);
-    if (err) setError(err.message);
-    else { setSaved(true); triggerRevalidation(); setTimeout(() => setSaved(false), 3000); }
-    setSaving(false);
+    try {
+      const isUpdate = !!settings.id;
+      const url = isUpdate ? `/api/admin/site_settings?id=${settings.id}` : '/api/admin/site_settings';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save settings');
+      }
+
+      const updated = await res.json();
+      if (updated && updated.id) setSettings(updated);
+
+      setSaved(true);
+      triggerRevalidation();
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 text-[#C9A86C] animate-spin" /></div>;

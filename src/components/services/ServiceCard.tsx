@@ -18,7 +18,7 @@ export default function ServiceCard({ service, index }: ServiceCardProps) {
       {/* Visual cover */}
       <div className="relative aspect-[3/2] overflow-hidden bg-neutral-100">
         <ImageWithFallback
-          src={service.heroImage}
+          src={(service as any).thumbnailImage || service.heroImage || (service as any).thumbnail_image_url || (service as any).hero_image_url}
           fallbackType="photo"
           fallbackIndex={index}
           alt={service.title}

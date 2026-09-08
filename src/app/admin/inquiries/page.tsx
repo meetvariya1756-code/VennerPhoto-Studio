@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import { Mail, Trash2, Loader2, Calendar, MapPin, User, Phone, Eye, X, CheckCircle2, Circle } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
 
@@ -25,20 +24,17 @@ export default function InquiriesAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data, error: err } = await sb
-      .from('contact_inquiries')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (err) {
-      setError('Supabase error: ' + err.message);
-      setInquiries([]);
-    } else {
-      setInquiries(data || []);
+    try {
+      const res = await fetch('/api/admin/contact_inquiries?order=created_at.desc');
+      const data = await res.json();
+      setInquiries(Array.isArray(data) ? data : []);
       setError('');
+    } catch (err: any) {
+      setError('Database error: ' + err.message);
+      setInquiries([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -47,32 +43,36 @@ export default function InquiriesAdminPage() {
 
   const handleToggleCompleted = async (id: string, currentVal: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
-    const sb = createClient();
-    const { error: err } = await sb
-      .from('contact_inquiries')
-      .update({ is_completed: !currentVal })
-      .eq('id', id);
+    try {
+      const res = await fetch(`/api/admin/contact_inquiries?id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_completed: !currentVal }),
+      });
 
-    if (err) {
-      alert('Failed to update status: ' + err.message);
-    } else {
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to update status');
+      }
+
       if (selected?.id === id) {
         setSelected({ ...selected, is_completed: !currentVal });
       }
       load();
+    } catch (err: any) {
+      alert('Failed to update status: ' + err.message);
     }
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm('Are you sure you want to delete this inquiry?')) return;
-    const sb = createClient();
-    const { error: err } = await sb.from('contact_inquiries').delete().eq('id', id);
-    if (err) {
-      alert('Delete failed: ' + err.message);
-    } else {
+    try {
+      await fetch(`/api/admin/contact_inquiries?id=${id}`, { method: 'DELETE' });
       if (selected?.id === id) setSelected(null);
       load();
+    } catch (err: any) {
+      alert('Delete failed: ' + err.message);
     }
   };
 

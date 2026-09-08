@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { queryPg } from '@/lib/postgres';
+import { insertLocal } from '@/lib/localDb';
 
 // Re-declare schema for server-side validation checks
 import * as zod from 'zod';
@@ -48,18 +49,33 @@ export async function POST(request: Request) {
     const safeLocation = location ? escapeHtml(location) : '';
     const safeMessage = message ? escapeHtml(message) : '';
 
-    // 1.5. Save inquiry to Supabase database
+    const inquiryId = crypto.randomUUID();
+    const inquiryRecord = {
+      id: inquiryId,
+      name: safeName,
+      email: safeEmail,
+      phone: safePhone,
+      service: safeService,
+      date: safeDate,
+      location: safeLocation || null,
+      message: safeMessage,
+      is_completed: false,
+    };
+
+    // 1.5. Save inquiry to local database storage (guaranteed persistence)
     try {
-      const sb = await createServerSupabaseClient();
-      await sb.from('contact_inquiries').insert({
-        name: safeName,
-        email: safeEmail,
-        phone: safePhone,
-        service: safeService,
-        date: safeDate,
-        location: safeLocation || null,
-        message: safeMessage,
-      });
+      insertLocal('contact_inquiries', inquiryRecord);
+    } catch (localErr) {
+      console.error('Local DB insertion failed for contact inquiry:', localErr);
+    }
+
+    // Also attempt PostgreSQL database insertion
+    try {
+      await queryPg(
+        `INSERT INTO public.contact_inquiries (id, name, email, phone, service, date, location, message)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [inquiryId, safeName, safeEmail, safePhone, safeService, safeDate, safeLocation || null, safeMessage]
+      );
     } catch (dbErr) {
       console.error('Database insertion failed for contact inquiry:', dbErr);
     }

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import Image from 'next/image';
+import ImageWithFallback from '../ui/ImageWithFallback';
 import SectionHeader from '../ui/SectionHeader';
 import { SanityImage } from '@/types';
 
@@ -44,7 +45,7 @@ const SERVICE_IMAGE_POOLS: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1604017011826-d3b4c23f8914?auto=format&fit=crop&w=1200&q=80',
   ],
   'baby-shower-photography': [
-    'https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1531914485145-b9a7bc70d0a6?auto=format&fit=crop&w=1200&q=80',
@@ -149,7 +150,7 @@ const SERVICE_IMAGE_POOLS: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1531914485145-b9a7bc70d0a6?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1490131784822-b4626a8ec96a?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1484981138541-3d074aa97716?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1553530979-fbb9e4aee36f?auto=format&fit=crop&w=1200&q=80',
@@ -195,19 +196,22 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
 
   // Determine which image pool to use
   const slug = serviceSlug || serviceTitle.toLowerCase().replace(/\s+/g, '-');
-  
+
   // Safe extraction of dynamic gallery images uploaded via Supabase Admin
   const defaultPool = SERVICE_IMAGE_POOLS[slug] || FALLBACK_IMAGES;
-  const galleryItems = gallery && gallery.length > 0 
-    ? gallery.map(item => {
-        if (typeof item === 'string') return { url: item, subCategory: null };
-        const url = (item as any).image_url || (item as any).url || (item as any).asset?._ref || '';
-        const subCategory = (item as any).sub_category || null;
-        return { url, subCategory };
-      }).filter(x => !!x.url)
-    : (slug === 'wedding-photography' 
-        ? MOCK_WEDDING_GALLERY 
-        : defaultPool.map(url => ({ url, subCategory: null })));
+  const galleryItems = gallery && gallery.length > 0
+    ? gallery.map((item, idx) => {
+      let rawUrl = typeof item === 'string' ? item : ((item as any).image_url || (item as any).url || (item as any).asset?._ref || '');
+      const subCategory = typeof item === 'object' && item ? (item as any).sub_category || null : null;
+      let url = rawUrl;
+      if (!url || url.includes('enkyolmjklvryvnzsmvt.supabase.co')) {
+        url = defaultPool[idx % defaultPool.length];
+      }
+      return { url, subCategory };
+    }).filter(x => !!x.url)
+    : (slug === 'wedding-photography'
+      ? MOCK_WEDDING_GALLERY
+      : defaultPool.map(url => ({ url, subCategory: null })));
 
   const filteredItems = galleryItems.filter(item => {
     if (activeTab === 'all') return true;
@@ -274,11 +278,10 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
                 setActiveTab(tab);
                 setLightboxIndex(null);
               }}
-              className={`relative font-sans text-xs tracking-widest uppercase pb-2 transition-colors duration-300 ${
-                activeTab === tab
-                  ? 'text-[#C9A86C] font-semibold'
-                  : 'text-neutral-400 hover:text-neutral-600'
-              }`}
+              className={`relative font-sans text-xs tracking-widest uppercase pb-2 transition-colors duration-300 ${activeTab === tab
+                ? 'text-[#C9A86C] font-semibold'
+                : 'text-neutral-400 hover:text-neutral-600'
+                }`}
             >
               {tab}
               {activeTab === tab && (
@@ -308,17 +311,17 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.5, delay: (index % 6) * 0.07 }}
               onClick={() => setLightboxIndex(index)}
-              className={`group relative overflow-hidden bg-neutral-200 cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-300 ${
-                isWide ? 'col-span-2' : ''
-              } ${isTall ? 'row-span-2' : ''}`}
+              className={`group relative overflow-hidden bg-neutral-200 cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-300 ${isWide ? 'col-span-2' : ''
+                } ${isTall ? 'row-span-2' : ''}`}
               style={{ aspectRatio: isTall ? '3/4' : isWide ? '16/9' : '4/3' }}
             >
-              <Image
+              <ImageWithFallback
                 src={url}
                 alt={`${serviceTitle} - Photo ${index + 1}`}
-                fill
+                fallbackType="photo"
+                fallbackIndex={index}
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                className="group-hover:scale-105 transition-transform duration-700 ease-out"
               />
               {/* Dark hover overlay with zoom icon */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
@@ -377,13 +380,15 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
                 transition={{ duration: 0.25 }}
                 className="w-full max-w-7xl h-full max-h-[75vh] md:max-h-[82vh] flex items-center justify-center relative"
               >
-                <div className="relative w-full h-full">
-                  <Image
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <ImageWithFallback
                     src={imageUrls[lightboxIndex]}
                     alt={`${serviceTitle} - Photo ${lightboxIndex + 1}`}
-                    fill
+                    fallbackType="photo"
+                    fallbackIndex={lightboxIndex}
                     sizes="(max-width: 1200px) 100vw, 1200px"
-                    className="object-contain"
+                    objectFit="contain"
+                    className="bg-transparent"
                     priority
                   />
                 </div>
@@ -409,13 +414,12 @@ export default function ServiceGallery({ gallery, serviceTitle, serviceSlug }: S
                       thumbnailRefs.current[i] = el;
                     }}
                     onClick={() => setLightboxIndex(i)}
-                    className={`relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 overflow-hidden rounded transition-all duration-200 cursor-pointer ${
-                      i === lightboxIndex
-                        ? 'ring-2 ring-[#C9A86C] scale-110 z-10 opacity-100'
-                        : 'opacity-40 hover:opacity-80'
-                    }`}
+                    className={`relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 overflow-hidden rounded transition-all duration-200 cursor-pointer ${i === lightboxIndex
+                      ? 'ring-2 ring-[#C9A86C] scale-110 z-10 opacity-100'
+                      : 'opacity-40 hover:opacity-80'
+                      }`}
                   >
-                    <Image src={url} alt="" fill sizes="56px" className="object-cover" />
+                    <ImageWithFallback src={url} alt="" fallbackType="photo" fallbackIndex={i} sizes="56px" />
                   </button>
                 ))}
               </div>

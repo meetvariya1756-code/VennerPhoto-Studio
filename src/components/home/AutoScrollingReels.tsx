@@ -44,9 +44,9 @@ export default function AutoScrollingReels({ reels }: AutoScrollingReelsProps) {
               onClick={() => setActiveVideoUrl(reel.videoUrl)}
               className="w-[200px] sm:w-[240px] aspect-[9/16] relative flex-shrink-0 cursor-pointer overflow-hidden rounded-none border border-neutral-800 hover:border-[#C9A86C]/50 transition-all duration-500 hover:scale-[1.03] shadow-2xl group"
             >
-              {/* Live video */}
               <video
                 src={reel.videoUrl}
+                poster={typeof reel.thumbnailImage === 'string' ? reel.thumbnailImage : undefined}
                 preload="metadata"
                 muted
                 playsInline

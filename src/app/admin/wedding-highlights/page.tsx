@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase';
 import MediaUpload from '@/components/admin/MediaUpload';
+import ImageWithFallback from '@/components/ui/ImageWithFallback';
 import { Plus, Trash2, Loader2, Save, X, Film, Video, Eye, EyeOff } from 'lucide-react';
 import { triggerRevalidation } from '@/lib/revalidate';
 
@@ -35,16 +35,15 @@ export default function WeddingHighlightsAdminPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const sb = createClient();
-    const { data, error: fetchErr } = await sb
-      .from('wedding_highlights')
-      .select('*')
-      .order('display_order');
-    if (fetchErr) {
-      console.error('Error fetching highlights:', fetchErr.message);
+    try {
+      const res = await fetch(`/api/admin/wedding_highlights?order=display_order.asc&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setHighlights(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load wedding highlights:', err);
+    } finally {
+      setLoading(false);
     }
-    setHighlights(data || []);
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -56,9 +55,7 @@ export default function WeddingHighlightsAdminPage() {
     if (!editing) return;
     setSaving(true);
     setError('');
-    const sb = createClient();
 
-    // Map fields and set default order if not provided
     const payload = {
       title: editing.title,
       video_url: editing.video_url,
@@ -69,33 +66,38 @@ export default function WeddingHighlightsAdminPage() {
       display_order: editing.display_order,
     };
 
-    const { error: err } = editing.id
-      ? await sb
-          .from('wedding_highlights')
-          .update({ ...payload, updated_at: new Date().toISOString() })
-          .eq('id', editing.id)
-      : await sb.from('wedding_highlights').insert({ ...payload });
+    try {
+      const isUpdate = !!editing.id;
+      const url = isUpdate ? `/api/admin/wedding_highlights?id=${editing.id}` : '/api/admin/wedding_highlights';
+      const method = isUpdate ? 'PUT' : 'POST';
 
-    if (err) {
-      setError(err.message);
-    } else {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save highlight');
+      }
+
       setEditing(null);
       load();
       triggerRevalidation();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this wedding highlight?')) return;
-    const sb = createClient();
-    const { error: err } = await sb.from('wedding_highlights').delete().eq('id', id);
-    if (err) {
-      alert(`Failed to delete: ${err.message}`);
-    } else {
-      load();
-      triggerRevalidation();
-    }
+    setHighlights(prev => prev.filter(h => h.id !== id));
+    await fetch(`/api/admin/wedding_highlights?id=${id}`, { method: 'DELETE' });
+    load();
+    triggerRevalidation();
   };
 
   if (loading) {
@@ -131,28 +133,11 @@ export default function WeddingHighlightsAdminPage() {
         {highlights.map((item) => (
           <div key={item.id} className="bg-white border border-neutral-200/60 rounded-xl overflow-hidden group shadow-sm flex flex-col justify-between">
             <div className="relative aspect-video bg-neutral-100 flex items-center justify-center border-b border-neutral-200 overflow-hidden">
-              {item.thumbnail_url ? (
-                <img
-                  src={item.thumbnail_url}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : item.video_url ? (
-                <video
-                  src={item.video_url}
-                  preload="metadata"
-                  muted
-                  playsInline
-                  loop
-                  autoPlay
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-1 text-neutral-400">
-                  <Video className="w-8 h-8 stroke-1" />
-                  <span className="text-[10px]">No Video Preview</span>
-                </div>
-              )}
+              <ImageWithFallback
+                src={item.thumbnail_url || item.video_url}
+                alt={item.title}
+                fallbackType="video-thumb"
+              />
               <div className="absolute top-2 right-2 flex items-center gap-1.5">
                 <span
                   className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm ${

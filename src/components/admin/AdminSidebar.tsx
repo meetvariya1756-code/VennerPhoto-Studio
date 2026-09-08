@@ -7,7 +7,6 @@ import {
   LayoutDashboard, Settings, Image, Film, Users, MessageSquare,
   Camera, LogOut, ChevronRight, Menu, X, Layers, Mail, Columns, Video
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -30,8 +29,7 @@ export default function AdminSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    document.cookie = 'admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     router.push('/admin/login');
   };
 

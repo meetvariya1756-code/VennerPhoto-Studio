@@ -1,10 +1,8 @@
 'use client';
 
-import React from 'react';
-import { createClient } from '@/lib/supabase';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
-// Fallback portfolio category nodes when Supabase is not configured yet
 const FALLBACK_CATEGORIES = [
   { id: 'all', title: 'All' },
   { id: 'wedding-photography', title: 'Wedding' },
@@ -30,57 +28,40 @@ export default function CategoryFilter({
   onCategoryChange,
   darkBg = false,
 }: CategoryFilterProps) {
-  const [categories, setCategories] = React.useState(FALLBACK_CATEGORIES);
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchCategories() {
       try {
-        const isSupabaseConfigured =
-          !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url' &&
-          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'your-supabase-anon-key';
-
-        if (!isSupabaseConfigured) return;
-
-        const sb = createClient();
-        const { data, error } = await sb
-          .from('services')
-          .select('title, slug')
-          .eq('is_active', true)
-          .order('display_order');
-
-        if (error) {
-          console.error('Error fetching categories for filter:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const dynamicCats = [
-            { id: 'all', title: 'All' },
-            ...data.map((s: any) => ({
-              id: s.slug,
-              title: s.title.replace(/\s+photography$/i, ''),
-            })),
-          ];
-          setCategories(dynamicCats);
+        const res = await fetch('/api/services');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const dynamicCats = [
+              { id: 'all', title: 'All' },
+              ...data.map((s: any) => ({
+                id: s.slug,
+                title: s.title.replace(/\s+photography$/i, ''),
+              })),
+            ];
+            setCategories(dynamicCats);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch categories:', err);
       }
     }
-
     fetchCategories();
   }, []);
 
   return (
-    <div className="w-full flex items-center justify-center overflow-x-auto pb-4 mb-12 scrollbar-hide">
+    <div className="w-full flex justify-center mb-10 px-2 sm:px-4">
       <div
         className={cn(
-          'flex items-center gap-1 p-1.5 md:p-2 max-w-full rounded-none border',
+          'flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 p-2.5 max-w-6xl rounded-2xl border transition-all duration-300',
           darkBg
-            ? 'bg-neutral-900/60 border-neutral-800'
-            : 'bg-[#1A1A1A]/5 border-neutral-200/50'
+            ? 'bg-black/60 border-white/10 backdrop-blur-md shadow-2xl'
+            : 'bg-white/95 border-neutral-200/80 backdrop-blur-md shadow-sm'
         )}
       >
         {categories.map((cat) => {
@@ -90,14 +71,14 @@ export default function CategoryFilter({
               key={cat.id}
               onClick={() => onCategoryChange(cat.id)}
               className={cn(
-                'whitespace-nowrap px-4 py-2 font-sans text-xs tracking-wider uppercase font-medium transition-all duration-300 focus:outline-none rounded-none',
+                'px-3.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-sans uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer select-none font-medium',
                 isActive
                   ? darkBg
-                    ? 'bg-[#C9A86C] text-black shadow-sm'
-                    : 'bg-[#1A1A1A] text-white shadow-sm'
+                    ? 'bg-[#C9A86C] text-[#1A1A1A] font-semibold shadow-md scale-[1.02]'
+                    : 'bg-[#1A1A1A] text-[#C9A86C] font-semibold shadow-md scale-[1.02]'
                   : darkBg
-                  ? 'text-neutral-400 hover:text-white'
-                  : 'text-neutral-500 hover:text-[#1A1A1A]'
+                  ? 'text-neutral-400 hover:text-white hover:bg-white/10'
+                  : 'text-neutral-600 hover:text-[#1A1A1A] hover:bg-neutral-100'
               )}
             >
               {cat.title}
