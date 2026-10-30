@@ -122,3 +122,66 @@ export interface WeddingHighlight {
   isActive: boolean;
   order: number;
 }
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featured_image_url?: string;
+  category: string;
+  author: string;
+  meta_title?: string;
+  meta_description?: string;
+  seo_keywords?: string;
+  is_published: boolean;
+  published_at: string;
+  views: number;
+  reading_time?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FooterKeyword {
+  keyword: string;
+  url?: string;
+}
+
+export interface SeoSettings {
+  id: string;
+  site_title?: string;
+  meta_description?: string;
+  default_keywords?: string;
+  footer_keywords: FooterKeyword[];
+  google_site_verification?: string;
+  og_image_url?: string;
+  canonical_url?: string;
+  robots_txt?: string;
+  updated_at?: string;
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  page_path: string;
+  visitor_id?: string;
+  session_id?: string;
+  referrer?: string;
+  device_type?: string;
+  browser?: string;
+  os?: string;
+  created_at: string;
+}
+
+export interface AnalyticsSummary {
+  totalViews: number;
+  totalVisitors: number;
+  totalSessions: number;
+  todayViews: number;
+  topPages: { path: string; views: number }[];
+  topReferrers: { referrer: string; count: number }[];
+  devices: { device: string; count: number }[];
+  dailyViews: { date: string; views: number }[];
+  recentVisits: AnalyticsEvent[];
+}
+

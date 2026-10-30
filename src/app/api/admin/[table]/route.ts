@@ -15,6 +15,9 @@ const ALLOWED_TABLES = new Set([
   'service_packages',
   'service_gallery',
   'contact_inquiries',
+  'blogs',
+  'seo_settings',
+  'analytics_events',
 ]);
 
 function sanitizeTable(table: string): string | null {

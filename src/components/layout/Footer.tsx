@@ -14,9 +14,24 @@ const FALLBACK_SERVICES = [
   { title: 'Modeling Portfolio', href: '/services/modeling-photography' },
 ];
 
+const FALLBACK_KEYWORDS = [
+  { keyword: 'Best Wedding Photographer in Surat', url: '/services/wedding-photography' },
+  { keyword: 'Luxury Pre-Wedding Shoot Surat', url: '/services/engagement-photography' },
+  { keyword: 'Cinematic Wedding Highlights & Films', url: '/reels' },
+  { keyword: 'Indoor Photo Studio Katargam Surat', url: '/services/indoor-studio-photography' },
+  { keyword: 'Born Baby & Newborn Photography Surat', url: '/services/born-baby' },
+  { keyword: 'Baby Shower & Maternity Shoots', url: '/services/baby-shower-photography' },
+  { keyword: 'Fashion & Modeling Portfolio Shoots', url: '/services/modeling-photography' },
+  { keyword: 'Toddler & Kids Portrait Photography', url: '/services/toddler-children' },
+  { keyword: 'Commercial & Product Photography', url: '/services/product-photography' },
+  { keyword: 'Candid Destination Wedding Shoots', url: '/portfolio' },
+  { keyword: 'Professional Photographers in Surat', url: '/team' },
+];
+
 export default function Footer() {
   const pathname = usePathname();
   const [services, setServices] = React.useState(FALLBACK_SERVICES);
+  const [seoKeywords, setSeoKeywords] = React.useState<any[]>(FALLBACK_KEYWORDS);
 
   React.useEffect(() => {
     async function fetchServices() {
@@ -38,7 +53,24 @@ export default function Footer() {
       }
     }
 
+    async function fetchSeoSettings() {
+      try {
+        const res = await fetch('/api/admin/seo_settings?limit=1');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0].footer_keywords)) {
+            if (data[0].footer_keywords.length > 0) {
+              setSeoKeywords(data[0].footer_keywords);
+            }
+          }
+        }
+      } catch (err) {
+        // keep fallback keywords
+      }
+    }
+
     fetchServices();
+    fetchSeoSettings();
   }, []);
 
   // Do not render footer in admin dashboard or sanity studio
@@ -50,6 +82,7 @@ export default function Footer() {
     { title: 'Portfolio', href: '/portfolio' },
     { title: 'Services', href: '/services' },
     { title: 'Video Reels', href: '/reels' },
+    { title: 'Journal / Blog', href: '/blog' },
     { title: 'Our Team', href: '/team' },
     { title: 'Contact Us', href: '/contact' },
   ];
@@ -170,6 +203,39 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Manageable SEO Keywords Section */}
+      {seoKeywords && seoKeywords.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 md:px-8 border-t border-neutral-800/80 pt-8 pb-10">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C9A86C]" />
+              <h4 className="font-sans text-[11px] uppercase tracking-widest text-neutral-400 font-semibold">
+                Popular Photography Searches & Specializations
+              </h4>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+              {seoKeywords.map((item: any, idx: number) => {
+                const keyword = typeof item === 'string' ? item : item.keyword;
+                const url = typeof item === 'string' ? '/services' : (item.url || '/services');
+                return (
+                  <React.Fragment key={idx}>
+                    <Link
+                      href={url}
+                      className="text-neutral-400 hover:text-[#C9A86C] transition-colors duration-200"
+                    >
+                      {keyword}
+                    </Link>
+                    {idx < seoKeywords.length - 1 && (
+                      <span className="text-neutral-700 select-none">•</span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer Bottom Deck */}
       <div className="max-w-7xl mx-auto px-6 md:px-8 border-t border-neutral-800 pt-8 flex flex-col md:flex-row items-center justify-between text-neutral-500 text-xs font-light">

@@ -7,8 +7,11 @@
 
 import { createServerSupabaseClient } from './supabase-server';
 import { queryPg } from './postgres';
-import { getLocalTable } from './localDb';
+import { getLocalTable, updateLocal } from './localDb';
 import MIGRATED_DATA from './migratedData.json';
+import type { BlogPost, SeoSettings, FooterKeyword, AnalyticsEvent, AnalyticsSummary } from '@/types';
+
+export type { BlogPost, SeoSettings, FooterKeyword, AnalyticsEvent, AnalyticsSummary };
 
 const data = MIGRATED_DATA as any;
 
@@ -319,4 +322,156 @@ export async function getWeddingHighlights(): Promise<WeddingHighlight[]> {
   if (data.wedding_highlights?.length > 0) return data.wedding_highlights;
   return [];
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// BLOGS, SEO SETTINGS & ANALYTICS
+// ─────────────────────────────────────────────────────────────────────
+
+export async function getBlogs(publishedOnly = true): Promise<BlogPost[]> {
+  const sql = publishedOnly
+    ? 'SELECT * FROM public.blogs WHERE is_published = TRUE ORDER BY published_at DESC'
+    : 'SELECT * FROM public.blogs ORDER BY created_at DESC';
+  const rows = await queryPg<BlogPost>(sql);
+  const merged = mergeWithLocal<BlogPost>(rows, 'blogs');
+  let list = merged;
+  if (publishedOnly) {
+    list = list.filter((b: any) => b.is_published !== false);
+  }
+  return list.sort((a, b) => {
+    const timeA = new Date(a.published_at || a.created_at || 0).getTime();
+    const timeB = new Date(b.published_at || b.created_at || 0).getTime();
+    return timeB - timeA;
+  });
+}
+
+export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
+  const blogs = await getBlogs(false);
+  const post = blogs.find(b => b.slug === slug);
+  return post || null;
+}
+
+export async function incrementBlogViews(slugOrId: string): Promise<void> {
+  try {
+    await queryPg(
+      'UPDATE public.blogs SET views = COALESCE(views, 0) + 1 WHERE slug = $1 OR id = $1',
+      [slugOrId]
+    );
+    const localBlogs = getLocalTable('blogs');
+    const blog = localBlogs.find(b => b.slug === slugOrId || b.id === slugOrId);
+    if (blog && blog.id) {
+      updateLocal('blogs', blog.id, { views: (blog.views || 0) + 1 });
+    }
+  } catch (err) {
+    console.warn('Failed to increment blog views:', err);
+  }
+}
+
+export async function getSeoSettings(): Promise<SeoSettings> {
+  const rows = await queryPg<SeoSettings>('SELECT * FROM public.seo_settings LIMIT 1');
+  const merged = mergeWithLocal<SeoSettings>(rows, 'seo_settings');
+  if (merged.length > 0) return merged[0];
+
+  return {
+    id: 'default',
+    site_title: 'Venner Photo Studio | Luxury Wedding & Portrait Photography in Surat',
+    meta_description: "Surat's premier high-end photography studio specializing in luxury weddings, cinematic reels, editorial portraits, baby shoots, and commercial brand storytelling.",
+    default_keywords: 'wedding photographer surat, best photo studio surat, luxury wedding photography, pre wedding shoot surat, baby photoshoot surat, maternity photographer, modeling portfolio surat',
+    footer_keywords: [
+      { keyword: 'Best Wedding Photographer in Surat', url: '/services/wedding-photography' },
+      { keyword: 'Luxury Pre-Wedding Shoot Surat', url: '/services/engagement-photography' },
+      { keyword: 'Cinematic Wedding Highlights & Films', url: '/reels' },
+      { keyword: 'Indoor Photo Studio Katargam Surat', url: '/services/indoor-studio-photography' },
+      { keyword: 'Born Baby & Newborn Photography Surat', url: '/services/born-baby' },
+      { keyword: 'Baby Shower & Maternity Shoots', url: '/services/baby-shower-photography' },
+      { keyword: 'Fashion & Modeling Portfolio Shoots', url: '/services/modeling-photography' },
+      { keyword: 'Toddler & Kids Portrait Photography', url: '/services/toddler-children' },
+      { keyword: 'Commercial & Product Photography', url: '/services/product-photography' },
+      { keyword: 'Candid Destination Wedding Shoots', url: '/portfolio' },
+      { keyword: 'Professional Photographers in Surat', url: '/team' }
+    ],
+    google_site_verification: '',
+    og_image_url: '/logo.png',
+    canonical_url: 'https://vennerphotostudio.com',
+    robots_txt: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /studio/\nDisallow: /api/',
+  };
+}
+
+export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const rows = await queryPg<AnalyticsEvent>('SELECT * FROM public.analytics_events ORDER BY created_at DESC LIMIT 5000');
+  const merged = mergeWithLocal<AnalyticsEvent>(rows, 'analytics_events');
+
+  const totalViews = merged.length;
+  const visitorIds = new Set<string>();
+  const sessionIds = new Set<string>();
+  const pageViewMap = new Map<string, number>();
+  const referrerMap = new Map<string, number>();
+  const deviceMap = new Map<string, number>();
+  const dailyMap = new Map<string, number>();
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let todayViews = 0;
+
+  for (const ev of merged) {
+    if (ev.visitor_id) visitorIds.add(ev.visitor_id);
+    if (ev.session_id) sessionIds.add(ev.session_id);
+
+    const path = ev.page_path || '/';
+    pageViewMap.set(path, (pageViewMap.get(path) || 0) + 1);
+
+    const ref = ev.referrer && ev.referrer.trim() ? ev.referrer : 'Direct / Organic';
+    let cleanRef = ref;
+    try {
+      if (ref.startsWith('http')) {
+        const u = new URL(ref);
+        cleanRef = u.hostname.replace('www.', '');
+      }
+    } catch {}
+    referrerMap.set(cleanRef, (referrerMap.get(cleanRef) || 0) + 1);
+
+    const dev = ev.device_type || 'Desktop';
+    deviceMap.set(dev, (deviceMap.get(dev) || 0) + 1);
+
+    const dateStr = (ev.created_at || '').slice(0, 10) || todayStr;
+    dailyMap.set(dateStr, (dailyMap.get(dateStr) || 0) + 1);
+    if (dateStr === todayStr) {
+      todayViews++;
+    }
+  }
+
+  // Top pages
+  const topPages = Array.from(pageViewMap.entries())
+    .map(([path, views]) => ({ path, views }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 10);
+
+  // Top referrers
+  const topReferrers = Array.from(referrerMap.entries())
+    .map(([referrer, count]) => ({ referrer, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
+  // Devices
+  const devices = Array.from(deviceMap.entries())
+    .map(([device, count]) => ({ device, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // Last 14 days sorted ascending
+  const dailyViews = Array.from(dailyMap.entries())
+    .map(([date, views]) => ({ date, views }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-14);
+
+  return {
+    totalViews,
+    totalVisitors: visitorIds.size || (totalViews > 0 ? Math.ceil(totalViews * 0.7) : 0),
+    totalSessions: sessionIds.size || totalViews,
+    todayViews,
+    topPages,
+    topReferrers,
+    devices,
+    dailyViews,
+    recentVisits: merged.slice(0, 15),
+  };
+}
+
 

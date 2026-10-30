@@ -197,3 +197,67 @@ CREATE TABLE IF NOT EXISTS public.contact_inquiries (
   is_completed BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ---------------------------------------------------------------------
+-- Table: blogs (SEO Articles & Editorial Journal)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.blogs (
+  id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  title TEXT NOT NULL,
+  slug VARCHAR(255) NOT NULL UNIQUE,
+  excerpt TEXT,
+  content TEXT NOT NULL,
+  featured_image_url TEXT,
+  category VARCHAR(100) DEFAULT 'Wedding',
+  author VARCHAR(255) DEFAULT 'Venner Photo Studio',
+  meta_title TEXT,
+  meta_description TEXT,
+  seo_keywords TEXT,
+  is_published BOOLEAN DEFAULT TRUE,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  views INT DEFAULT 0,
+  reading_time VARCHAR(50) DEFAULT '5 min read',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_blogs_slug ON public.blogs(slug);
+CREATE INDEX IF NOT EXISTS idx_blogs_published ON public.blogs(is_published, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_blogs_category ON public.blogs(category);
+
+-- ---------------------------------------------------------------------
+-- Table: seo_settings (Global SEO defaults & manageable footer keywords)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.seo_settings (
+  id VARCHAR(255) PRIMARY KEY DEFAULT 'default',
+  site_title TEXT,
+  meta_description TEXT,
+  default_keywords TEXT,
+  footer_keywords JSONB DEFAULT '[]'::jsonb,
+  google_site_verification TEXT,
+  og_image_url TEXT,
+  canonical_url TEXT,
+  robots_txt TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ---------------------------------------------------------------------
+-- Table: analytics_events (Privacy-friendly website traffic & page views)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+  id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  page_path TEXT NOT NULL,
+  visitor_id VARCHAR(255),
+  session_id VARCHAR(255),
+  referrer TEXT,
+  device_type VARCHAR(50),
+  browser VARCHAR(100),
+  os VARCHAR(100),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_path ON public.analytics_events(page_path);
+CREATE INDEX IF NOT EXISTS idx_analytics_created ON public.analytics_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_device ON public.analytics_events(device_type);
+

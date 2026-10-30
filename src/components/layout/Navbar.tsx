@@ -104,6 +104,7 @@ export default function Navbar() {
     { title: 'Portfolio', href: '/portfolio' },
     { title: 'Services', href: '/services', dropdown: true },
     { title: 'Reels', href: '/reels' },
+    { title: 'Blog', href: '/blog' },
     { title: 'Team', href: '/team' },
     { title: 'Contact', href: '/contact' },
   ];

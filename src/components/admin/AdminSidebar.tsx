@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Settings, Image, Film, Users, MessageSquare,
-  Camera, LogOut, ChevronRight, Menu, X, Layers, Mail, Columns, Video
+  Camera, LogOut, ChevronRight, Menu, X, Layers, Mail, Columns, Video,
+  BookOpen, Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/blogs', label: 'Blog Posts', icon: BookOpen },
+  { href: '/admin/seo', label: 'SEO & Keywords', icon: Globe },
   { href: '/admin/settings', label: 'Site Settings', icon: Settings },
   { href: '/admin/heroes', label: 'Hero Banners', icon: Layers },
   { href: '/admin/services', label: 'Services', icon: Camera },
